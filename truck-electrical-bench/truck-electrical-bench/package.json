@@ -1,0 +1,7 @@
+{
+  "name": "truck-electrical-bench",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Phone-friendly truck electrical diagnosis trainer with a live circuit simulator.",
+  "scripts": { "build": "python3 build.py", "test": "node tests/sim-test.js" }
+}
