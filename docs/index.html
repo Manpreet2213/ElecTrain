@@ -113,6 +113,25 @@ details.card summary{cursor:pointer;font-family:var(--f-display);font-weight:700
 .stats{display:flex;gap:16px;color:var(--muted);font-size:.88rem}
 .stats b{color:var(--ink);font-variant-numeric:tabular-nums}
 .warn{background:var(--warn-bg);border-radius:8px;padding:8px 10px;font-size:.88rem;margin:0}
+.tabs{display:flex;gap:4px;border-bottom:1.5px solid var(--line);margin:-4px 0 4px}
+.tabs button{border:0;background:transparent;padding:8px 12px;font-family:var(--f-display);font-weight:700;font-size:1rem;letter-spacing:.03em;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+#paneJob{display:flex;flex-direction:column;gap:10px}
+.learn{display:flex;flex-direction:column;gap:12px}
+.learn h3{font-size:1.05rem;margin-top:4px}
+.learn p,.learn li{max-width:65ch;margin:0}
+.learn ol,.learn ul{margin:0;padding-left:1.25em;display:flex;flex-direction:column;gap:6px}
+.learn .box{background:var(--bg);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.learn .path{font-size:.92rem;line-height:1.6}
+.learn .path b{font-family:var(--f-display);font-weight:700;letter-spacing:.02em}
+.learn code,.explain code{font-family:var(--f-lcd);font-size:.88em;background:var(--bg);padding:0 4px;border-radius:4px}
+.learn dl{display:grid;grid-template-columns:max-content 1fr;gap:6px 12px;margin:0;font-size:.92rem}
+.learn dt{font-family:var(--f-display);font-weight:700}
+.learn dd{margin:0}
+.explain{background:var(--sheet);border:1.5px solid var(--accent);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.explain p{margin:0;max-width:65ch}
+.explain .x{align-self:flex-end;border:0;background:transparent;color:var(--muted);font-size:.85rem;padding:0}
+.tg.lab{cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -136,18 +155,28 @@ details.card summary{cursor:pointer;font-family:var(--f-display);font-weight:700
     <p class="warn" id="shWarn" hidden></p>
   </section>
 
-  <section class="card" aria-labelledby="woTitle">
-    <div class="wo-head"><h2 id="woTitle">Work order</h2><span class="tag" id="woMeta"></span></div>
-    <p class="complaint" id="complaint"></p>
-    <div class="row">
-      <button class="btn primary" id="newJob">New job here</button>
-      <button class="btn" id="anyJob">Random sheet</button>
-      <div class="seg" role="group" aria-label="Faults per job">
-        <button id="d1" aria-pressed="true">1 fault</button>
-        <button id="d2" aria-pressed="false">2 faults</button>
-      </div>
-      <button class="btn small" id="cleanJob">Known-good</button>
+  <section class="card" aria-label="Work order and lessons">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabJob" aria-selected="true">Work order</button>
+      <button role="tab" id="tabLearn" aria-selected="false">Learn</button>
+      <button role="tab" id="tabWords" aria-selected="false">Word list</button>
     </div>
+    <div id="paneJob" role="tabpanel">
+      <div class="wo-head"><h2 id="woTitle">Work order</h2><span class="tag" id="woMeta"></span></div>
+      <p class="complaint" id="complaint"></p>
+      <div class="row">
+        <button class="btn primary" id="newJob">New job here</button>
+        <button class="btn" id="anyJob">Random sheet</button>
+        <div class="seg" role="group" aria-label="Faults per job">
+          <button id="d1" aria-pressed="true">1 fault</button>
+          <button id="d2" aria-pressed="false">2 faults</button>
+        </div>
+        <button class="btn small" id="cleanJob">Known-good</button>
+      </div>
+      <p class="hint">New here? Open the <b>Learn</b> tab. It explains this drawing and walks you through this job.</p>
+    </div>
+    <div id="paneLearn" role="tabpanel" class="learn" hidden></div>
+    <div id="paneWords" role="tabpanel" class="learn" hidden></div>
   </section>
 
   <section class="meter" aria-label="Multimeter">
@@ -166,7 +195,8 @@ details.card summary{cursor:pointer;font-family:var(--f-display);font-weight:700
   </section>
 
   <div class="sheetview" id="view"><svg id="svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Circuit schematic"></svg></div>
-  <p class="hint">Tap a dot to put the selected lead there. Tap a switch or module output (orange tags) to flip it. Scroll sideways on wide sheets.</p>
+  <div class="explain" id="explain" hidden></div>
+  <p class="hint">Tap a dot to put the selected lead there. Tap a switch or module output (orange) to flip it. <b>Tap any label</b> to see what that part is. Scroll sideways on wide sheets.</p>
   <div class="controls" id="controls"></div>
 
   <section class="card" aria-labelledby="dxTitle">
@@ -1517,6 +1547,103 @@ function causeFor(p,type){
   return C('Wear and corrosion.','Repair or replace the part.');
 }
 if(typeof module!=='undefined')module.exports={detectable,TYPES,KIND,build,simulate,ohms,complaint,pickFaults,causeFor,stateOn,stateOff,goodObs,observe,elemR,nomR};
+/* ===== Teaching layer: plain-language explanations ===== */
+const MODULES={A03:'the instrument cluster (the dash gauges computer)',A11:'the door lock computer',A12B:'the ABS brake computer',A13E:'the I-Shift transmission computer (TECU)',A13B:'the I-Shift transmission computer (TECU)',
+  A14:'the engine computer (ECM)',A14B:'the Cummins engine computer (ECM)',A14C:'the Cummins engine computer (ECM)',X11A:'the ISX-G engine computer',A15:'the airbag computer (SRS)',A15A:'the airbag computer (SRS)',
+  A16:'the air suspension computer (ECS)',A17:'the vehicle computer (VECU)',A27:'the light control module (LCM), the computer that runs the lights',A34:'the climate control unit',A36:'the bodybuilder module (BBM)',
+  A46:'the sleeper control module (LECM)',A55A:'the Eaton transmission computer',A55B:'the Endurant transmission computer',A57A:'the Allison transmission computer',A56:'the stereo amplifier',A109:'the gear selector computer',
+  A137:'the AdBlue/DEF computer (ACM)',A147:'the fuel filter module',A148:'the heated windshield controller',A150:'the telematics gateway (TGW)',A158:'the radio',A175:'the telematics box',A176:'the lane departure camera',
+  A186:'the parking cooler',A231:'the SEM radio unit',A234:'the steering gateway',A235:'the steering motor unit',A240:'the tire pressure computer',A247:'the tire pressure receiver',A248:'the pusher axle ABS (TABS6)',
+  A320:'the Cummins ADEPT unit',A374:'the seat airbag computer',A381DS:'the driver seat suspension',A381PS:'the passenger seat suspension',Z21:'the Qualcomm box',X11:'the engine computer connector'};
+const LETTERS=[['A','A computer / control module (A27 = light computer, A03 = dash cluster)'],['B','A sensor (reads pressure, temperature, speed…)'],['E','A lamp / light bulb'],['F, FE, FT, FB','A fuse. F = in the cab fuse box, FE = in the frame fuse box (EFRC), FT/FB/FEM = big fuses near the batteries'],
+  ['G','A battery or alternator. G01 = the batteries'],['H','A horn, buzzer or alarm'],['K, RLY, RE','A relay (an electric switch). RLY = cab fuse box, RE = frame fuse box'],['M','A motor (wiper, starter, fan…)'],['R','A resistor or a heater element'],['S','A switch you press, or a pressure/position switch'],
+  ['V','A diode (lets current go only one way)'],['X','A connector, or a ground stud bolted to the frame/cab'],['Y','A solenoid valve (an electric magnet that opens air or fluid)'],['Z','A connector block or a solenoid pack'],['SP…','A splice: wires joined together inside the harness tape'],['MCFC','The main cab-to-frame connector: the big plug where cab wiring meets chassis wiring'],
+  ['FRC','The fuse & relay center in the cab (the main fuse box)'],['EFRC','The external fuse & relay center on the frame'],['SKX03…','A ground splice pack: a block where many ground wires meet']];
+const SECTION_NAMES={A:'power, grounds and starting',B:'dash, telematics and bodybuilder',C:'engine',D:'transmission',E:'suspension and brakes',F:'air controls on the chassis',G:'lighting',H:'climate and sleeper',I:'cab and body',J:'safety systems',K:'audio',M:'trailer cables',N:'extra equipment',X:'data links (how computers talk)'};
+const FEED={B:'the battery (always has power, even with the key off)',I:'ignition (only has power when the key is ON)','5':'a 5-volt signal made inside a computer',C:'the data link (computers talking)',S:'a battery directly',A:'120 V house power (dangerous)'};
+
+const tAll=s=>String(s);
+function modName(tag){const m=/^([AXZ]\d+[A-Z]*\d*[A-Z]*)/.exec(tag);if(!m)return null;let k=m[1];while(k&&!MODULES[k])k=k.slice(0,-1);return k?MODULES[k]:null}
+function pinWords(tag){
+  let m;
+  if(m=/^FRC_J(\d+):(\w+)$/.exec(tag))return `the cab fuse box (FRC), back plug J${m[1]}, pin ${m[2]}`;
+  if(m=/^EFRC\.(\w+):(\w+)$/.exec(tag))return `the frame fuse box (EFRC), plug ${m[1]}, pin ${m[2]}`;
+  if(m=/^MCFC:(\w+)$/.exec(tag))return `the main cab-to-frame connector, pin ${m[1]}`;
+  if(m=/^(A\d+\w*) ([A-Z]?\d?):?(\w+)$/.exec(tag)){const n=modName(m[1]);return `${n||'module '+m[1]}, ${m[2]?'connector '+m[2]+', ':''}pin ${m[3]}`}
+  if(m=/^([A-Z][A-Z0-9_.]*):(\w+)$/.exec(tag))return `connector ${m[1]}, pin ${m[2]}`;
+  return null}
+function explainPart(p){
+  const tag=p.tag,t=p.t;let what='',why='',extra='';
+  switch(t){
+    case 'f':{const m=/^(FE|FT|FB|FEM|F)(\d+)/.exec(tag);const where=m&&m[1]==='FE'?'the frame fuse box (EFRC)':m&&m[1]==='F'?'the cab fuse box (FRC)':'a fuse holder near the batteries';
+      what=`Fuse ${tag} (${p.p} A) in ${where}.`;why=`A fuse is a thin metal strip. If too much current flows (like from a short), it melts and cuts power so the wire doesn't catch fire. ${p.p} A is the most it will carry.`;break}
+    case 'cb':what=`Circuit breaker ${tag} (${p.p} A).`;why='Like a fuse, but it trips and can be reset instead of melting.';break;
+    case 'rk':what=`The coil of relay ${p.p}.`;why='A relay is an electric switch. A small current through this coil (pins 86 and 85) makes a magnet. The magnet pulls the relay’s heavy contacts closed. You hear a click.';break;
+    case 'rc':what=`The contacts of relay ${p.p} (pins 30 → 87).`;why='These are the heavy-duty switch inside the relay. They close only when the coil is powered. This lets a small switch control a big load.';break;
+    case 'rn':what=`The resting contacts of relay ${p.p} (pins 30 → 87A).`;why='These are closed when the relay is OFF and open when it clicks on.';break;
+    case 'w':{const m=/^(.*?)-(\d+(?:\.\d+)?)/.exec(tag);what=`A wire named ${m?m[1]:tag}${m?`, ${m[2]} mm² thick`:''}.`;
+      why=`Wire names come from the circuit they belong to. The number after the dash is the thickness in mm²: bigger number = thicker wire = more current. ${m&&+m[2]>=6?'This is a heavy cable.':m&&+m[2]<=0.8?'This is a thin signal-size wire.':''}`;break}
+    case 'k':{const pw=pinWords(tag);
+      if(/^SP/.test(tag)){what=`Splice ${tag}.`;why='A splice is where several wires are crimped together inside the harness tape. One bad splice can kill everything joined there.'}
+      else if(isStud(tag,p.n)){what=`Ground or power stud ${tag}.`;why='A threaded bolt where ring terminals are bolted on. Ground studs connect circuits back to the battery negative through the frame or cab.'}
+      else{what=pw?`A plug: ${pw}.`:`Connector ${tag}.`;why='A connector lets the harness come apart for service. Each wire has its own numbered pin. Pins can corrode, spread open or back out.'}
+      break}
+    case 'sw':what=`Switch ${tag}.`;why='A switch you press, or one that is moved by air pressure or position. Closed lets current through; open stops it. Tap it on the drawing to flip it.';break;
+    case 'ecu':{const n=modName(tag);what=`An output of ${n||'a computer module'} (${tag}).`;why='Inside the module is an electronic switch. The computer turns it on when it decides the job should happen. In this trainer, tap it to give that command.';break}
+    case 'L':what=`${p.n}: a bulb.`;why='The lamp is the "load": the thing the circuit exists to power. Current flows through it to ground and it lights.';break;
+    case 'D':what=`${p.n}: an LED lamp.`;why='An LED is a modern lamp. It works only with + and − the right way round.';break;
+    case 'M':what=`${p.n}: a motor.`;why='The motor is the load: power in, ground out, and it spins.';break;
+    case 'H':what=`${p.n}: a horn / speaker.`;why='It makes sound when current flows through its coil.';break;
+    case 'S':what=`${p.n}: a solenoid.`;why='A solenoid is a coil of wire that becomes a magnet when powered. It pulls a plunger to open an air or fluid valve, or engage something.';break;
+    case 'X':what=`${p.n}: a heater element.`;why='It turns electricity into heat. It needs a lot of current.';break;
+    case 'E':{const n=modName(tag);what=`${p.n}${n?` (${n})`:''}.`;why='This box uses power to do its job. For the trainer it counts as one load.';break}
+    case 'R':what=`${p.n}.`;why=/bias|transceiver/i.test(p.n)?'This is part of a computer’s data-link circuit. It is not something you replace on its own.':'A sensor or resistor. Its resistance changes with what it measures (temperature, pressure, position). The computer reads that as a voltage.';break;
+    case 'Q':{const n=modName(tag);what=`An input pin of ${n||'a module'} (${tag}).`;why='This is the computer’s "ear". It watches the voltage on this wire. A scan tool shows that voltage as live data.';break}
+    case 'T':what=`Terminating resistor ${tag} (120 Ω).`;why='Data links have one of these at each end. Together they read 60 Ω. They stop signals from echoing so the computers can talk.';break;
+    case 'ri':what=`Battery ${tag}.`;why='The trainer models the battery’s internal resistance. A weak battery has more, so voltage drops when the starter pulls current.';break;
+    case 'G':what=`Ground point ${tag}.`;why='Every circuit has to get back to battery negative. This is the shared return point. If it is loose or rusty, several things fail at once.';break;
+  }
+  return {what,why}}
+function friendly(p){
+  if(p.t==='w')return null;if(p.t==='k'&&/^SP/.test(p.tag))return 'splice '+p.tag;
+  if(p.t==='k')return 'plug '+p.tag;if(p.t==='f')return 'fuse '+p.tag;if(p.t==='rc')return 'relay '+p.p+' contacts';if(p.t==='rn')return 'relay '+p.p+' resting contacts';if(p.t==='rk')return 'relay '+p.p+' coil';
+  if(p.t==='sw')return 'switch '+p.tag;if(p.t==='ecu')return 'computer output '+p.tag;if('LDMHSXE'.includes(p.t))return '<b>'+esc(p.n)+'</b> (the load)';if(p.t==='Q')return 'computer input '+p.tag;if(p.t==='T')return 'terminator '+p.tag;return p.tag}
+function pathText(M,c){
+  const col=M.sh.cols[c],items=M.parts.filter(p=>p.c===c);
+  const start=typeof col.f==='string'?'Starts at '+FEED[col.f]:'Branches off path '+(col.f[0]+1);
+  const end=col.e==null?'ends there (open end)':col.e==='N'?'goes back to battery negative':typeof col.e==='string'?'goes to ground point '+col.e.slice(2)+' and back to battery negative':'joins path '+(col.e[0]+1);
+  const steps=items.map(friendly).filter(Boolean).map(s=>esc(s).replace(/&lt;(\/?)b&gt;/g,'<$1b>'));
+  return `${start} → ${steps.join(' → ')} → ${end}.`}
+function sheetStory(M){const sh=M.sh;
+  return `<div class="box"><h3>What is "${esc(sh.id)}"?</h3><p><b>${esc(sh.id)}</b> is just Volvo’s code for this page of the wiring manual (page ${sh.pg}): <b>${esc(sh.t)}</b>. The first letter tells the topic: <b>${sh.id[0]}</b> = ${SECTION_NAMES[sh.id[0]]||'other'}. The second letter just numbers the pages inside that topic.</p></div>`}
+function jobCoach(M){const j=S.job,c=j&&j.complaint||'';
+  if(!S.faults.length&&!(j&&j.done))return `<div class="box"><h3>This job, step by step</h3><p>No faults right now. This is the best time to learn what "good" looks like:</p><ol><li>Put the black lead on <b>Batt −</b> (the button under the meter).</li><li>Turn on the switches and computer outputs (the orange ones).</li><li>Tap down one path with the red lead. Write down where you see 12 V and where it drops to 0 V (after the load).</li><li>Now press <b>New job here</b>. Something will be broken and you’ll spot the difference.</li></ol></div>`;
+  if(j&&j.done)return `<div class="box"><h3>Job closed</h3><p>Read the "What caused it" box under Call the fault. Then try <b>New job here</b> or <b>Random sheet</b>.</p></div>`;
+  const loads=M.parts.filter(p=>'LDMHSXE'.includes(p.t)&&c.includes(p.n));
+  let steps=['<li><b>Read the complaint.</b> What exactly doesn’t work? That’s your starting point, not the whole drawing.</li>'];
+  if(loads.length){const L=loads[0];steps.push(`<li><b>Find it on the drawing:</b> ${esc(L.n)} (label <code>${esc(L.tag)}</code>). Look up its path in "How this circuit works" below. That’s the only path you need to test first.</li>`);
+    const sws=M.parts.filter(p=>(p.t==='sw'||p.t==='ecu')&&p.c===L.c);if(sws.length)steps.push(`<li><b>Switch it on.</b> Tap ${sws.map(s=>'<code>'+esc(s.tag)+'</code>').join(', ')} so the circuit is trying to work.</li>`)}
+  if(/blows/.test(c))steps.push('<li><b>A fuse blowing means a short</b>: power is reaching ground before the load. Switch the meter to <b>Ω</b>. Put black on Batt − and touch red along the path after the fuse. A good wire reads the load’s resistance; close to 0 Ω means you’re at or past the short. Move along until it changes.</li>');
+  else if(/dim|weak|slow|acts up/.test(c))steps.push('<li><b>Weak or dim means extra resistance</b> (corrosion) somewhere. Keep everything switched on. Put the red and black leads on the two ends of one part at a time: fuse, plug, wire, ground. A good part reads almost 0 V across it. More than about 0.3 V across one part means you found the bad spot.</li>');
+  else if(/stays on|keeps|stays engaged|stays powered|stays clicked/.test(c))steps.push('<li><b>Something stays on with everything off</b>: a switch, relay or computer output is stuck closed. Turn the key and switches OFF. Then find where voltage is still reaching the load that shouldn’t be.</li>');
+  else if(/Scan tool/.test(c))steps.push('<li><b>A computer sees a wrong voltage.</b> Its input normally reads 5 V with the switch/sensor open and near 0 V when closed. Follow that signal wire from the computer input (the "in" box) out to the switch or sensor and back to ground.</li>');
+  else if(/[Dd]ata link|communicat/.test(c))steps.push('<li><b>Computers can’t talk.</b> Key OFF, meter on <b>Ω</b>, red on the CAN-H wire, black on CAN-L. 60 Ω = good. 120 Ω = one terminator or a wire to it is open. Near 0 = shorted. With the key ON, each line should be about 2.5 V. 0 V means it’s shorted to ground.</li>');
+  else steps.push('<li><b>Dead means no power is getting through</b> (an open). Black lead on <b>Batt −</b>. Start at the fuse with red: 12 V? Move one dot at a time toward the load. When the 12 V disappears, the break is between your last two dots. If the load gets 12 V but still doesn’t work, check its ground side the same way.</li>');
+  if(/[Rr]elay/.test(c))steps.push('<li><b>Relay not clicking:</b> check for 12 V on the coil feed (pin 86) and a ground on pin 85. Both good but no click = bad relay. Missing = follow that wire.</li>');
+  steps.push('<li><b>Call it.</b> When one part reads wrong, pick it under <b>Call the fault</b> and say what’s wrong with it (open, corroded, shorted…).</li>');
+  return `<div class="box"><h3>This job, step by step</h3><ol>${steps.join('')}</ol></div>`}
+function drawLearn(){const M=S.M;if(!M)return;
+  const paths=M.sh.cols.map((c,i)=>c.it.length===1&&Array.isArray(c.f)&&Array.isArray(c.e)?null:`<li class="path"><b>Path ${i+1}:</b> ${pathText(M,i)}</li>`).filter(Boolean).join('');
+  $('paneLearn').innerHTML=jobCoach(M)+sheetStory(M)+
+    `<div class="box"><h3>How this circuit works</h3><p>${esc(M.sh.note)}</p><p>On the drawing, each vertical line is one path. Current always flows from the top (power) through the parts down to the ground symbol at the bottom, then back to the battery. Read each path top to bottom:</p><ol>${paths}</ol></div>`+
+    `<div class="box"><h3>Tap to learn</h3><p>Tap any label on the drawing (like <code>F20</code> or <code>MCFC:73</code>) and a box under the drawing explains it in plain words.</p></div>`}
+function drawWords(){
+  $('paneWords').innerHTML=`<div class="box"><h3>What the first letters mean</h3><dl>${LETTERS.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl></div>
+  <div class="box"><h3>Reading a pin name</h3><dl><dt><code>FRC_J3:F3</code></dt><dd>Cab fuse box, back plug J3, pin F3</dd><dt><code>MCFC:73</code></dt><dd>Main cab-to-frame connector, pin 73</dd><dt><code>A27 D:5</code></dt><dd>Module A27 (light computer), connector D, pin 5</dd><dt><code>F20AK-1.0</code></dt><dd>A wire in circuit F20, 1.0 mm² thick</dd><dt><code>X03</code></dt><dd>Ground stud number 03 (on the cab)</dd></dl></div>
+  <div class="box"><h3>The words in the complaints</h3><dl><dt>Open</dt><dd>A break. Current can’t get through (broken wire, pin pushed out). Things go dead.</dd><dt>High resistance</dt><dd>Partly blocked, usually by corrosion. Things work weakly or dim.</dd><dt>Short to ground</dt><dd>Bare wire touching metal. Current skips the load and blows the fuse.</dd><dt>Stuck / welded</dt><dd>A switch or relay that won’t turn off.</dd><dt>Load</dt><dd>The thing doing the work: lamp, motor, horn, heater.</dd><dt>Ground</dt><dd>The return path to battery negative, through the frame and ground wires.</dd><dt>Voltage drop</dt><dd>Volts "lost" across a part. A good part loses almost nothing.</dd><dt>Relay</dt><dd>An electric switch: a small current clicks it on so it can switch a big current.</dd><dt>CAN / data link</dt><dd>Two twisted wires (CAN-H and CAN-L) that the computers talk over.</dd></dl></div>
+  <div class="box"><h3>The meter</h3><dl><dt>V (volts)</dt><dd>Electrical "pressure". Measure with power on. 12.6 V = full battery.</dd><dt>Ω (ohms)</dt><dd>How hard it is for current to get through. Measure with power off. 0 Ω = perfect connection, OL = open/broken.</dd><dt>Black lead</dt><dd>Usually stays on battery negative (Batt −).</dd><dt>Red lead</dt><dd>The one you move from dot to dot.</dd></dl></div>`}
+function showExplain(id){const p=S.M.byId[id];if(!p)return;const e=explainPart(p),box=$('explain');
+  box.innerHTML=`<button class="x" id="exClose">Close ✕</button><p><b>${esc(p.tag)}</b>: ${esc(e.what)}</p><p>${esc(e.why)}</p>${p.n&&!e.what.includes(p.n)?`<p class="hint">Manual name: ${esc(p.n)}</p>`:''}`;box.hidden=false;try{box.scrollIntoView({block:'nearest',behavior:'smooth'})}catch(e){}$('exClose').onclick=()=>{box.hidden=true}}
 /* ===== UI ===== */
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1580,7 +1707,7 @@ function drawSVG(V){
   M.sh.cols.forEach((col,c)=>{
     const ids=M.ids[c],items=M.parts.filter(p=>p.c===c);
     if(L.inline[c]){const [fc,fk]=col.f,[ec,ek]=col.e,x1=L.X(fc),y1=L.ny[fc][fk],x2=L.X(ec),y2=L.ny[ec][ek],mx=(x1+x2)/2,my=(y1+y2)/2,ang=Math.atan2(y2-y1,x2-x1)*180/Math.PI;
-      o+=`<path d="M${x1} ${y1}L${x2} ${y2}" class="wr"/>`;sy+=`<g transform="translate(${mx} ${my}) rotate(${ang-90})">${symbol(items[0],V)}</g>`;tg+=`<text x="${mx}" y="${my-13}" text-anchor="middle" class="tg">${esc(items[0].tag)}</text>`;return}
+      o+=`<path d="M${x1} ${y1}L${x2} ${y2}" class="wr"/>`;sy+=`<g transform="translate(${mx} ${my}) rotate(${ang-90})">${symbol(items[0],V)}</g>`;tg+=`<text x="${mx}" y="${my-13}" text-anchor="middle" class="tg lab" data-part="${items[0].id}">${esc(items[0].tag)}</text>`;return}
     const x=L.X(c),ys=L.ny[c];
     if(col.f==='B')o+=`<path d="M${x} 26V${ys[0]}" class="wr"/><circle cx="${x}" cy="26" r="3.2" class="dot"/>`;
     else if(col.f==='I')o+=`<path d="M${x} 50V${ys[0]}" class="wr"/><circle cx="${x}" cy="50" r="3.2" class="dot"/>`;
@@ -1588,7 +1715,7 @@ function drawSVG(V){
     else{const fx=L.X(col.f[0]);o+=`<path d="M${fx} ${ys[0]}H${x}" class="wr"/><circle cx="${fx}" cy="${ys[0]}" r="3.2" class="dot"/>`}
     items.forEach((p,k)=>{const y1=ys[k],y2=ys[k+1],my=(y1+y2)/2;o+=`<path d="M${x} ${y1}V${y2}" class="wr"/>`;
       const s=symbol(p,V);if(s)sy+=`<g transform="translate(${x} ${my})">${s}</g>`;
-      const t=p.tag.length>13?p.tag.slice(0,12)+'…':p.tag;tg+=`<text x="${x+14}" y="${my+4}" class="tg${p.t==='sw'||p.t==='ecu'?' sw':''}">${esc(t)}<title>${esc(p.tag+' · '+p.n)}</title></text>`});
+      const t=p.tag.length>13?p.tag.slice(0,12)+'…':p.tag;tg+=`<text x="${x+14}" y="${my+4}" class="tg lab${p.t==='sw'||p.t==='ecu'?' sw':''}" data-part="${p.id}">${esc(t)}<title>${esc(p.tag+' · '+p.n)}</title></text>`});
     const yl=ys[ys.length-1];
     if(col.e==='N')o+=gsym(x,yl,'Batt −');else if(typeof col.e==='string')o+=gsym(x,yl,col.e.slice(2));
     else if(Array.isArray(col.e)){const tx=L.X(col.e[0]),ty=L.ny[col.e[0]][col.e[1]];o+=`<path d="M${x} ${yl}V${yl+10}L${tx} ${ty}" class="jmp"/>`}
@@ -1636,12 +1763,12 @@ function showCauses(list,title){const M=S.M,box=$('causeBox');
   box.innerHTML=list.map(f=>{const p=M.byId[f.pid],c=causeFor(p,f.type);return `<div><span class="k">${esc(title)}: ${esc(p.tag)} · ${TYPES[f.type]}</span><p><b>What caused it.</b> ${esc(c.c)}</p><p><b>Proper repair.</b> ${esc(c.f)}</p></div>`}).join('');box.hidden=!list.length}
 
 function render(){_fm=fmap(S.faults);let V=null;if(S.mode==='V'){V=simulate(S.M,S.st,S.faults)}else V={};
-  drawPanels();drawSVG(S.mode==='V'?V:null);drawMeter(V)}
+  drawPanels();drawSVG(S.mode==='V'?V:null);drawMeter(V);drawLearn()}
 
 /* ---- jobs ---- */
 function msg(t,cls){$('dxMsg').textContent=t;$('dxMsg').className='msg'+(cls?' '+cls:'')}
 function resetBench(){S.st={sw:{},blown:{},relay:{},key:true};msg('');showCauses([],'')}
-function loadSheet(id,kind){S.sid=id;LS.set('teb2-sheet',id);S.M=build(SH.find(s=>s.id===id));S.L=layout(S.M);S.red='BAT';S.black='N';$('sheetSel').value=id;newJob(kind||'random')}
+function loadSheet(id,kind){$('explain').hidden=true;S.sid=id;LS.set('teb2-sheet',id);S.M=build(SH.find(s=>s.id===id));S.L=layout(S.M);S.red='BAT';S.black='N';$('sheetSel').value=id;newJob(kind||'random')}
 function newJob(kind){resetBench();S.faults=[];
   if(kind==='random'){S.faults=pickFaults(S.M,S.diff)||pickFaults(S.M,1)||[]}
   S.job={kind,misses:0,done:false,shown:false,complaint:complaint(S.M,S.faults)};render()}
@@ -1667,7 +1794,7 @@ function find(q){q=q.trim().toLowerCase();const out=$('findRes');if(q.length<2){
 
 /* ---- events ---- */
 function toggleSw(id){S.st.sw[id]=!S.st.sw[id]}
-$('svg').addEventListener('click',e=>{const t=e.target.closest('[data-node],[data-sw],[data-key]');if(!t)return;
+$('svg').addEventListener('click',e=>{const t=e.target.closest('[data-node],[data-sw],[data-key],[data-part]');if(!t)return;if(t.dataset.part){showExplain(t.dataset.part);return}
   if(t.dataset.key)S.st.key=!S.st.key;else if(t.dataset.sw)toggleSw(t.dataset.sw);else S[S.act]=t.dataset.node;render()});
 $('controls').addEventListener('click',e=>{const t=e.target.closest('button');if(!t)return;
   if(t.dataset.key)S.st.key=!S.st.key;
@@ -1690,12 +1817,15 @@ $('prevSh').onclick=()=>step(-1);$('nextSh').onclick=()=>step(1);
 $('findQ').addEventListener('input',e=>find(e.target.value));
 $('findRes').addEventListener('click',e=>{const t=e.target.closest('[data-open]');if(!t)return;loadSheet(t.dataset.open);document.querySelector('.sheetbar').scrollIntoView({behavior:'smooth'})});
 
+/* ---- tabs ---- */
+function tab(name){for(const n of ['Job','Learn','Words']){$('tab'+n).setAttribute('aria-selected',n===name);$('pane'+n).hidden=n!==name}LS.set('teb2-tab',name)}
+for(const n of ['Job','Learn','Words'])$('tab'+n).onclick=()=>tab(n);
 /* ---- boot ---- */
 (function(){const g={};SH.forEach(s=>(g[s.id[0]]||(g[s.id[0]]=[])).push(s));
   $('sheetSel').innerHTML=Object.keys(GROUPS).filter(k=>g[k]).map(k=>`<optgroup label="${esc(GROUPS[k])}">${g[k].map(s=>`<option value="${s.id}">${s.id} · ${esc(s.t)} (p. ${s.pg})</option>`).join('')}</optgroup>`).join('');
   $('pins').innerHTML=[[1,'wht','White','Ground'],[2,'blk','Black','Clearance / marker lights'],[3,'yel','Yellow','Left turn'],[4,'red','Red','Stop lights'],[5,'grn','Green','Right turn'],[6,'brn','Brown','Tail lights'],[7,'blu','Blue','ABS / auxiliary']]
    .map(([n,k,c,f])=>`<span class="num">${n}</span><span class="row" style="gap:6px"><span class="sw-c" style="background:var(--w-${k})"></span>${c}</span><span>${f}</span>`).join('');
-  loadSheet(S.sid,'random')})();
+  drawWords();loadSheet(S.sid,'random');tab(LS.get('teb2-tab','Job'))})();
 
 </script>
 </body>
