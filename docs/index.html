@@ -116,6 +116,25 @@ details.card summary{cursor:pointer;font-family:var(--f-display);font-weight:700
 .tabs{display:flex;gap:4px;border-bottom:1.5px solid var(--line);margin:-4px 0 4px}
 .tabs button{border:0;background:transparent;padding:8px 12px;font-family:var(--f-display);font-weight:700;font-size:1rem;letter-spacing:.03em;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1.5px}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs{overflow-x:auto;scrollbar-width:none}
+.tabs button{padding:8px 9px;white-space:nowrap}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+details.stage{border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;display:block}
+details.stage[open]{display:flex;flex-direction:column;gap:8px}
+details.stage summary{display:flex;gap:10px;align-items:center;cursor:pointer;font-family:var(--f-display);font-weight:700;list-style:none}
+details.stage summary::-webkit-details-marker{display:none}
+details.stage .sn{width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;flex:none}
+details.stage .st{flex:1}
+details.stage .sc{font-size:.85rem;color:var(--muted);white-space:nowrap}
+details.stage.done{border-color:var(--ok)}details.stage.done .sn{background:var(--ok);color:#fff}
+details.stage.locked{opacity:.6}
+.tip{background:var(--bg);border-radius:8px;padding:8px 10px;font-size:.9rem}
+.quiz .opts{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.opt{text-align:left;border:1.5px solid var(--line);background:var(--sheet);border-radius:8px;padding:7px 10px;font-size:.88rem}
+.opt.ok{border-color:var(--ok);color:var(--ok)}.opt.no{border-color:var(--bad);color:var(--bad)}
+.done-box{border:1.5px solid var(--ok)}
+.btn[disabled]{opacity:.45}
+[data-tkwire],[data-tktest]{white-space:nowrap}
 #paneJob{display:flex;flex-direction:column;gap:10px}
 .learn{display:flex;flex-direction:column;gap:12px}
 .learn h3{font-size:1.05rem;margin-top:4px}
@@ -132,6 +151,25 @@ details.card summary{cursor:pointer;font-family:var(--f-display);font-weight:700
 .explain p{margin:0;max-width:65ch}
 .explain .x{align-self:flex-end;border:0;background:transparent;color:var(--muted);font-size:.85rem;padding:0}
 .tg.lab{cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:var(--sheet);border-radius:999px;padding:5px 11px;font-size:.85rem;font-weight:600}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--sheet);border-color:var(--ink)}
+.chip.done::after{content:" ✓";color:var(--ok)}
+.chip[aria-pressed="true"].done::after{color:inherit}
+.slots{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:0}
+.slots li{display:flex;align-items:center;gap:8px;padding:6px 8px;border-left:3px solid var(--wire);margin-left:10px;min-height:38px;font-size:.92rem}
+.slots li.end{border-left-color:transparent;font-weight:600;margin-left:0;padding-left:0}
+.slots li.ok{background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.slots li.no{background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.slots li.empty{color:var(--muted);font-style:italic}
+.slots .n{font-family:var(--f-display);font-weight:700;color:var(--muted);min-width:1.4em}
+.slots .rm{margin-left:auto;border:0;background:transparent;color:var(--muted);font-size:1rem;padding:2px 6px}
+.bin{display:flex;gap:6px;flex-wrap:wrap}
+.part{border:1.5px solid var(--ink);background:var(--sheet);border-radius:8px;padding:6px 10px;font-size:.88rem;text-align:left;display:flex;flex-direction:column;gap:1px;max-width:100%}
+.part b{font-family:var(--f-display);font-weight:700;font-size:.98rem}
+.part span{color:var(--muted);font-size:.78rem}
+.fb{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.fb li.ok{color:var(--ok)}.fb li.no{color:var(--bad)}
 [hidden]{display:none!important}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -159,7 +197,9 @@ details.card summary{cursor:pointer;font-family:var(--f-display);font-weight:700
     <div class="tabs" role="tablist">
       <button role="tab" id="tabJob" aria-selected="true">Work order</button>
       <button role="tab" id="tabLearn" aria-selected="false">Learn</button>
-      <button role="tab" id="tabWords" aria-selected="false">Word list</button>
+      <button role="tab" id="tabBuild" aria-selected="false">Build</button>
+      <button role="tab" id="tabTruck" aria-selected="false">Truck</button>
+      <button role="tab" id="tabWords" aria-selected="false">Words</button>
     </div>
     <div id="paneJob" role="tabpanel">
       <div class="wo-head"><h2 id="woTitle">Work order</h2><span class="tag" id="woMeta"></span></div>
@@ -176,6 +216,8 @@ details.card summary{cursor:pointer;font-family:var(--f-display);font-weight:700
       <p class="hint">New here? Open the <b>Learn</b> tab. It explains this drawing and walks you through this job.</p>
     </div>
     <div id="paneLearn" role="tabpanel" class="learn" hidden></div>
+    <div id="paneBuild" role="tabpanel" class="learn" hidden></div>
+    <div id="paneTruck" role="tabpanel" class="learn" hidden></div>
     <div id="paneWords" role="tabpanel" class="learn" hidden></div>
   </section>
 
@@ -205,7 +247,7 @@ details.card summary{cursor:pointer;font-family:var(--f-display);font-weight:700
       <label class="f">Part<select id="dxPart"></select></label>
       <label class="f">What's wrong<select id="dxType"></select></label>
     </div>
-    <div class="row"><button class="btn primary" id="dxGo">Check it</button><button class="btn small" id="giveUp">Show answer</button></div>
+    <div class="row"><button class="btn primary" id="dxGo">Check it</button><button class="btn small" id="giveUp">Show answer</button><button class="btn" id="qcPass" hidden>Sign it off: no mistakes</button></div>
     <p class="msg" id="dxMsg"></p>
     <div id="causeBox" class="cause" hidden></div>
   </section>
@@ -1644,6 +1686,150 @@ function drawWords(){
   <div class="box"><h3>The meter</h3><dl><dt>V (volts)</dt><dd>Electrical "pressure". Measure with power on. 12.6 V = full battery.</dd><dt>Ω (ohms)</dt><dd>How hard it is for current to get through. Measure with power off. 0 Ω = perfect connection, OL = open/broken.</dd><dt>Black lead</dt><dd>Usually stays on battery negative (Batt −).</dd><dt>Red lead</dt><dd>The one you move from dot to dot.</dd></dl></div>`}
 function showExplain(id){const p=S.M.byId[id];if(!p)return;const e=explainPart(p),box=$('explain');
   box.innerHTML=`<button class="x" id="exClose">Close ✕</button><p><b>${esc(p.tag)}</b>: ${esc(e.what)}</p><p>${esc(e.why)}</p>${p.n&&!e.what.includes(p.n)?`<p class="hint">Manual name: ${esc(p.n)}</p>`:''}`;box.hidden=false;try{box.scrollIntoView({block:'nearest',behavior:'smooth'})}catch(e){}$('exClose').onclick=()=>{box.hidden=true}}
+
+/* ===== Build mode: put a real path back together ===== */
+const BKIND={f:'fuse',cb:'breaker',k:'plug / splice',sw:'switch',ecu:'computer output',rc:'relay contacts',rn:'relay contacts',rk:'relay coil',L:'lamp',D:'LED lamp',M:'motor',H:'horn / speaker',S:'solenoid',X:'heater',E:'module',R:'sensor / resistor',Q:'computer input',T:'terminator',ri:'battery',w:'wire'};
+function buildPaths(M){return M.sh.cols.map((c,i)=>({c:i,items:M.parts.filter(p=>p.c===i)})).filter(o=>!(M.sh.cols[o.c].it.length===1&&Array.isArray(M.sh.cols[o.c].f)&&Array.isArray(M.sh.cols[o.c].e)))}
+function bDone(){return LS.get('teb2-built',{})}
+function bTarget(c){return S.M.parts.filter(p=>p.c===c&&(S.bw||p.t!=='w'))}
+function bStart(c){const M=S.M,t=bTarget(c);let seed=c*7919+M.sh.pg*31;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+  const others=M.parts.filter(p=>p.c!==c&&p.c>=0&&p.t!=='w'&&p.t!=='G'&&!t.some(x=>x.tag===p.tag));const decoys=[];
+  while(decoys.length<Math.min(2,others.length)){const d=others[Math.floor(rnd()*others.length)];if(!decoys.includes(d))decoys.push(d)}
+  const bin=[...t,...decoys].map(p=>p.id);for(let i=bin.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[bin[i],bin[j]]=[bin[j],bin[i]]}
+  S.build={c,placed:[],bin,decoys:decoys.map(d=>d.id),result:null}}
+function bDefaultPath(){const M=S.M,c=S.job&&S.job.complaint||'';const L=M.parts.find(p=>'LDMHSXE'.includes(p.t)&&c.includes(p.n));const paths=buildPaths(M);
+  return L&&paths.some(o=>o.c===L.c)?L.c:(paths[0]?paths[0].c:0)}
+function bEnds(c){const col=S.M.sh.cols[c];
+  const start=typeof col.f==='string'?{B:'Battery power (BATT bus, always hot)',I:'Ignition power (IGN bus, key ON)','5':'5 V signal from inside a computer',C:'Data link bias (inside the computers)',S:'Battery post',A:'120 V AC supply'}[col.f]:'Taps into path '+(col.f[0]+1);
+  const end=col.e==null?'Ends here (open end)':col.e==='N'?'Battery negative':typeof col.e==='string'?'Ground point '+col.e.slice(2)+' → battery negative':'Joins path '+(col.e[0]+1);
+  return {start,end}}
+function bReason(p,want,prevOk){
+  if(S.build.decoys.includes(p.id))return `${p.tag} is not on this path. It belongs to path ${p.c+1}. Decoy!`;
+  const t=bTarget(S.build.c),i=t.findIndex(x=>x.id===p.id),before=t[i-1],after=t[i+1];
+  let r=`${p.tag} (${BKIND[p.t]}) goes ${before?'right after '+before.tag:'first, right after the power source'}${after?' and before '+after.tag:''}.`;
+  if(p.t==='f'&&i===0)r+=' Fuses always sit closest to the power so they protect the whole wire after them.';
+  else if(p.t==='f')r+=' The fuse protects everything after it.';
+  else if('LDMHSXE'.includes(p.t))r+=' The load sits after everything that feeds or switches it, with only its ground side after it.';
+  else if(p.t==='k'&&/^FRC_/.test(p.tag))r+=' The fuse-box pin comes right after the fuse: that’s where the wire leaves the fuse box.';
+  else if(p.t==='k'&&/^MCFC/.test(p.tag))r+=' MCFC is where the wire passes from the cab to the chassis, so it sits between cab parts and chassis parts.';
+  else if(p.t==='rc'||p.t==='rn')r+=' The relay contacts switch the heavy current, so they sit between the fuse and the load.';
+  else if(p.t==='ecu')r+=' A low-side computer output sits on the ground side; a high-side one sits on the power side.';
+  return r}
+function bCheck(){const b=S.build,t=bTarget(b.c),res=[];
+  b.placed.forEach((id,i)=>{const p=S.M.byId[id];const ok=t[i]&&t[i].id===id;res.push({i,ok,msg:ok?`${i+1}. ${p.tag}: correct.`:`${i+1}. ${bReason(p)}`})});
+  const missing=t.length-b.placed.filter((id,i)=>t[i]&&t[i].id===id).length;
+  b.result={res,allOk:missing===0&&b.placed.length===t.length};
+  if(b.result.allOk){const d=bDone();(d[S.M.sh.id]||(d[S.M.sh.id]=[])).includes(b.c)||d[S.M.sh.id].push(b.c);LS.set('teb2-built',d)}
+  drawBuild()}
+function drawBuild(){const M=S.M;if(!M)return;const paths=buildPaths(M);if(!paths.length){$('paneBuild').innerHTML='<p>No paths to build on this sheet.</p>';return}
+  if(!S.build||S.build.sid!==M.sh.id||!paths.some(o=>o.c===S.build.c)){bStart(bDefaultPath());S.build.sid=M.sh.id}
+  const b=S.build,t=bTarget(b.c),E=bEnds(b.c),done=bDone()[M.sh.id]||[],R=b.result;
+  const slot=i=>{const id=b.placed[i];const st=R&&R.res[i]?(R.res[i].ok?' ok':' no'):'';
+    if(!id)return `<li class="empty"><span class="n">${i+1}</span>${i===b.placed.length?'← tap a part below to put it here':''}</li>`;
+    const p=M.byId[id];return `<li class="${st}"><span class="n">${i+1}</span><span><b>${esc(p.tag)}</b> <span class="hint">${esc(BKIND[p.t])}</span></span><button class="rm" data-brm="${i}" aria-label="Remove">✕</button></li>`};
+  const bin=b.bin.filter(id=>!b.placed.includes(id)).map(id=>{const p=M.byId[id];return `<button class="part" data-badd="${esc(id)}"><b>${esc(p.tag)}</b><span>${esc(BKIND[p.t])}</span></button>`}).join('');
+  $('paneBuild').innerHTML=`<div class="box"><h3>Build it yourself</h3><p>Rebuild one path of <b>${esc(M.sh.id)} · ${esc(M.sh.t)}</b> from memory. Tap parts in the order current flows: from the power at the top, down to ground. Watch out for decoys from other paths. ${S.bw?'':'Wires are joined for you.'}</p>
+    <div class="chips">${paths.map(o=>`<button class="chip${done.includes(o.c)?' done':''}" data-bpath="${o.c}" aria-pressed="${o.c===b.c}">Path ${o.c+1}</button>`).join('')}</div>
+    <label class="row" style="gap:6px;font-size:.88rem"><input type="checkbox" id="bWires" ${S.bw?'checked':''}> Hard mode: include every wire</label></div>
+    <ul class="slots"><li class="end">⚡ ${esc(E.start)}</li>${t.map((_,i)=>slot(i)).join('')}<li class="end">⏚ ${esc(E.end)}</li></ul>
+    <div class="bin">${bin||'<span class="hint">All parts placed. Tap Check.</span>'}</div>
+    <div class="row"><button class="btn primary" id="bCheck">Check</button><button class="btn small" id="bHint">Hint</button><button class="btn small" id="bReset">Start over</button><button class="btn small" id="bShow">Show answer</button></div>
+    ${R?`<div class="box">${R.allOk?`<p class="msg ok">Built! Path ${b.c+1} is wired exactly like the manual.</p><p>Now go to the drawing and find this path. Put the red lead on each part you just placed and watch the 12 V travel down it. ${done.length>=paths.length?`<b>You built every path on this sheet.</b> <button class="btn small primary" data-qc="${esc(M.sh.id)}">Test it: first power-up</button>`:'Try the next path.'}</p>`:`<p><b>${R.res.filter(r=>r.ok).length} of ${t.length} in the right spot.</b> Fix the red ones:</p>`}<ol class="fb" style="list-style:none;padding:0">${R.res.filter(r=>!r.ok).map(r=>`<li class="no">${esc(r.msg)}</li>`).join('')}</ol></div>`:''}`;
+}
+function bShow(){const b=S.build;b.placed=bTarget(b.c).map(p=>p.id);b.result=null;drawBuild();$('paneBuild').insertAdjacentHTML('beforeend','<p class="hint">Answer filled in. Tap Start over and try it from memory.</p>')}
+document.addEventListener('click',e=>{const t=e.target.closest('#paneBuild [data-badd],#paneBuild [data-brm],#paneBuild [data-bpath],#bCheck,#bHint,#bReset,#bShow');if(!t)return;const b=S.build;
+  if(t.dataset.badd){const n=bTarget(b.c).length;if(b.placed.length<n)b.placed.push(t.dataset.badd);b.result=null}
+  else if(t.dataset.brm!=null){b.placed.splice(+t.dataset.brm,1);b.result=null}
+  else if(t.dataset.bpath!=null){bStart(+t.dataset.bpath);S.build.sid=S.M.sh.id}
+  else if(t.id==='bCheck'){bCheck();return}
+  else if(t.id==='bReset'){bStart(b.c);S.build.sid=S.M.sh.id}
+  else if(t.id==='bShow'){bShow();return}
+  else if(t.id==='bHint'){const tg=bTarget(b.c);let i=0;while(i<b.placed.length&&b.placed[i]===tg[i].id)i++;b.placed=b.placed.slice(0,i);if(i<tg.length)b.placed.push(tg[i].id);b.result=null;drawBuild();$('paneBuild').insertAdjacentHTML('beforeend',`<p class="hint">Hint: kept your correct start and added the next part (${esc(tg[Math.min(i,tg.length-1)].tag)}).</p>`);return}
+  drawBuild()});
+document.addEventListener('change',e=>{if(e.target.id==='bWires'){S.bw=e.target.checked;bStart(S.build.c);S.build.sid=S.M.sh.id;drawBuild()}});
+/* ===== Truck mode: build the whole truck, stage by stage, then test it ===== */
+const STAGES=[
+  {n:'Read the book',ids:[],why:'Before you touch a wire you need to read the drawings: what the letters on parts mean, and how current flows from power to ground.',test:'Pass the quick quiz below. The Words tab has every answer.'},
+  {n:'Grounds',ids:['AE','AL','AN'],why:'Battery negative to the frame, frame to engine, and the cab ground studs. Every circuit ends at a ground, so grounds go in first. Bad grounds cause the weirdest faults on a truck.',test:'Key off, ohms: each ground stud to battery negative should read almost 0 Ω. Under load, the voltage across a good ground is under 0.2 V.'},
+  {n:'Power distribution',ids:['AA','AB','AC','AD','AQ','BL'],why:'Battery cables, the main fuse boxes (FRC in the cab, EFRC on the frame) and the feeds leaving them. This is the trunk of the tree: every other sheet starts at a fuse on these pages.',test:'Before the battery goes on, check each power wire to ground: it must read OL (no short). Then power up through a fused jumper and check voltage at every fuse.'},
+  {n:'Starting and charging',ids:['AF','AK','AM'],why:'Starter, alternator, key switch and big power cables. After this the truck can crank and keep its batteries charged.',test:'Measure voltage drop on the starter cables while cranking (positive side and ground side). Engine running, the batteries should see about 13.8 to 14.4 V.'},
+  {n:'Data network',ids:[],pre:'X',why:'The J1939 and J1587 wires that let every computer talk. They go in before the computers, because every computer needs them.',test:'Key off, ohms across CAN-H and CAN-L: about 60 Ω (two 120 Ω end resistors). 120 Ω means one is missing; near 0 Ω means the wires are shorted together.'},
+  {n:'Main computers',ids:['AG','AH','AI','AJ','BA','BB','BP','BY'],pre:'C',why:'Vehicle computer (VECU), engine computer (ECM) and the dash cluster. Each one gets power, ground and the network, then its switches and sensors. After this the engine can run.',test:'Check every power and ground pin at the computer plug before plugging it in. Then key on: the scan tool should see each computer and show sensible live data.'},
+  {n:'Drivetrain',ids:[],pre:'D',why:'Transmission computer (I-Shift, Eaton, Allison, Endurant) and PTO.',test:'Check the neutral-start circuit first: the truck must only crank in neutral. Then confirm the transmission computer is online.'},
+  {n:'Brakes and chassis',ids:[],pre:'EF',why:'ABS and stability control, air suspension, air dryer, lift axles, diff lock, 5th wheel and tire pressure.',test:'ABS sensors: about 1–2.5 kΩ each, key off. Key on: the ABS lamp should go out after the self-check. Work every air solenoid and listen for it.'},
+  {n:'Lights and trailer',ids:['IH'],pre:'GM',why:'The lighting computer (LCM) first, then every lamp on the truck, then the 7-way trailer plug.',test:'Walk around with the key on and work every light switch. Check each 7-way pin with a test light or a trailer tester.'},
+  {n:'Cab and comfort',ids:['HA','HC','HI','BE','BF','BH','BJ','BM','NA','ND','IA','IB','IC','IE','IF','IG','IR','IS'],pre:'K',why:'Climate, doors, windows, mirrors, seats, radio, telematics, bodybuilder wiring and accessories.',test:'Work every switch in the cab and confirm each one does its job. Shore power: check for 120 V only with the right safety gear.'},
+  {n:'Sleeper and safety',ids:['HB','HD','HE','HF','HG','HJ','HK','HL'],pre:'J',why:'The sleeper computer (LECM) and its loads, driver-assist radars and cameras, and the airbags. Airbags go in last because they are live explosives: they should not be connected while people are still working in the cab.',test:'Never put an ohmmeter on an airbag. Use the scan tool: the SRS lamp must go out after the self-check. Then do the final truck sign-off.'}];
+/* give every sheet a stage (named lists win over letter groups) */
+function stageOf(id){for(let i=1;i<STAGES.length;i++)if(STAGES[i].ids.includes(id))return i;
+  for(let i=1;i<STAGES.length;i++)if(STAGES[i].pre&&STAGES[i].pre.includes(id[0]))return i;return 9}
+function stageSheets(i){return SH.filter(s=>stageOf(s.id)===i).sort((a,b)=>a.pg-b.pg)}
+const TK={get(){return LS.get('teb2-truck',{tested:{},quiz:false,fails:0,trucks:0})},set(d){LS.set('teb2-truck',d)}};
+const _pc={};function pathCount(id){if(_pc[id]==null){const M=build(SH.find(s=>s.id===id));_pc[id]=buildPaths(M).length}return _pc[id]}
+function wiredN(id){const d=bDone()[id]||[];return Math.min(d.length,pathCount(id))}
+function isWired(id){return wiredN(id)>=pathCount(id)}
+function stageDone(i,d){if(i===0)return !!d.quiz;return stageSheets(i).every(s=>isWired(s.id)&&d.tested[s.id])}
+function freeMode(){return !!LS.get('teb2-truck-free',false)}
+function unlocked(i,d){if(freeMode()||i===0)return true;for(let k=0;k<i;k++)if(!stageDone(k,d))return false;return true}
+
+/* stage 0 quiz */
+let QZ=null;
+function newQuiz(){const pick=LETTERS.slice().sort(()=>Math.random()-.5).slice(0,4);
+  QZ=pick.map(q=>{const wrong=LETTERS.filter(x=>x!==q).sort(()=>Math.random()-.5).slice(0,2);
+    return {q:q[0],a:q[1],opts:[q,...wrong].map(x=>x[1]).sort(()=>Math.random()-.5),pick:null}})}
+
+/* what went wrong on a new build (not wear and tear) */
+function qcCause(p,type){const C=(c,f)=>({c,f});
+  if(p.t==='w')return type==='open'?C('Build mistake: the wire was never crimped properly, so it pulled out of its terminal when the harness was laid in.','Cut back, strip to the right length, crimp with the correct tool and do a pull test on the crimp.')
+    :type==='high'?C('Build mistake: the crimp grabbed the insulation instead of the copper, so only a few strands make contact.','Cut it off, strip it properly and crimp again. Pull-test it.')
+    :C('Build mistake: the harness got pinched under a bracket or clamp during install and the copper is touching metal.','Free the harness, repair the insulation, re-route it and clamp it properly. New fuse only after the short is fixed.');
+  if(p.t==='k')return type==='open'?C(`Build mistake: ${p.tag} was not pushed together until it clicked, or a terminal was never pushed in until it locked.`,'Push the connector halves together until they click, seat the terminal, and install the secondary lock (TPA).')
+    :C(`Build mistake: a terminal in ${p.tag} is only half seated, or it is the wrong size for its pin, so it fits loose.`,'Install the correct terminal and seat it until it locks.');
+  if(p.t==='G')return C(`Build mistake: the ground at ${p.tag} was bolted on over paint, or the nut was never torqued.`,'Clean the stud and ring terminal to bare metal, torque the nut, and coat it to stop corrosion.');
+  if(p.t==='f'||p.t==='cb')return C(`Build mistake: ${p.tag} is the wrong rating or was not pushed fully into the fuse box.`,'Install the rating shown on the drawing and push it in fully.');
+  if(p.t==='T')return C('Build mistake: the 120 Ω terminating resistor was left out.','Install it. CAN-H to CAN-L should then read about 60 Ω with the key off.');
+  const what={open:'it is open inside',high:'it has high resistance inside',short:'it is shorted inside',stuck:'it is stuck on',shorted:'it is shorted inside'}[type]||'it does not work';
+  return C(`Bad part out of the box: this ${BKIND[p.t]||'part'} came from the supplier faulty (${what}). It happens on new builds.`,'Replace it with a new part, send the bad one back as a warranty claim, then retest the whole path.')}
+
+function truckPass(){const d=TK.get(),id=S.M.sh.id,i=stageOf(id);d.tested[id]=1;TK.set(d);
+  return stageDone(i,d)?` Stage ${i} (${STAGES[i].n}) is complete.`:' Back to the Truck tab for the next sheet.'}
+function qcSignOff(){const j=S.job;if(!j||j.kind!=='qc'||j.done)return;j.done=true;
+  if(S.faults.length){const list=S.faults.slice();j.shown=true;const d=TK.get();d.fails=(d.fails||0)+1;TK.set(d);
+    msg('You signed it off, but there was still a mistake in it. That truck would break down on the road. Here is what you missed:','bad');render();showCauses(list,'Missed');$('causeBox').hidden=false}
+  else{const extra=truckPass();msg('Correct: this sheet was built right. Signed off.'+extra,'ok');render()}}
+
+function drawTruck(){const el=$('paneTruck');if(!el)return;const d=TK.get();
+  const total=SH.length,tested=SH.filter(s=>d.tested[s.id]).length,all=STAGES.every((_,i)=>stageDone(i,d));
+  let cur=STAGES.findIndex((_,i)=>!stageDone(i,d));if(cur<0)cur=STAGES.length-1;
+  const open=LS.get('teb2-truck-open',cur);
+  let h=`<div class="box"><h3>Build a whole truck</h3><p>Wire the truck the way a plant or a rebuild shop does: grounds first, then power, then the network, then the computers, and everything else after. Each sheet is two jobs. <b>Wire it</b> in the Build tab (every path). Then <b>Test it</b>: first power-up, and the app may have slipped in a real build mistake. Find it, or sign the sheet off if it's good.</p>
+    <p class="row" style="gap:14px"><span><b class="num">${tested}</b> of ${total} sheets signed off</span><span><b class="num">${d.fails||0}</b> bad sign-offs</span>${d.trucks?`<span><b class="num">${d.trucks}</b> trucks finished</span>`:''}</p>
+    <div class="bar"><i style="width:${(tested/total*100).toFixed(1)}%"></i></div>
+    <label class="row" style="gap:6px;font-size:.88rem"><input type="checkbox" id="tkFree" ${freeMode()?'checked':''}> Practice: unlock every stage</label></div>`;
+  if(all)h+=`<div class="box done-box"><h3>Truck finished</h3><p>Every sheet is wired and signed off. On a real truck the last checks are:</p><ul><li>The scan tool sees <b>every computer</b> on the network, with no fault codes.</li><li>CAN-H to CAN-L reads about <b>60 Ω</b> with the key off.</li><li>Key-off battery drain is within Volvo's spec, so the batteries don't go flat overnight.</li><li>Every lamp, gauge, switch and warning light has been checked.</li></ul><button class="btn primary" id="tkNew">Start a new truck</button></div>`;
+  STAGES.forEach((st,i)=>{const ok=unlocked(i,d),dn=stageDone(i,d),sheets=stageSheets(i);
+    const nDone=i===0?(d.quiz?1:0):sheets.filter(s=>isWired(s.id)&&d.tested[s.id]).length,nAll=i===0?1:sheets.length;
+    h+=`<details class="stage${dn?' done':''}${ok?'':' locked'}" data-stage="${i}" ${i===open&&ok?'open':''}><summary><span class="sn">${i}</span><span class="st">${esc(st.n)}</span><span class="sc">${dn?'✓ done':ok?nDone+'/'+nAll:'🔒 locked'}</span></summary>`;
+    if(!ok){h+=`<p class="hint">Finish stage ${i-1} first. On a real truck you can't test this before the stages under it work.</p></details>`;return}
+    h+=`<p>${esc(st.why)}</p><p class="tip"><b>How to test this stage:</b> ${esc(st.test)}</p>`;
+    if(i===0){if(!QZ)newQuiz();
+      h+=d.quiz?'<p class="msg ok">Quiz passed. You can read the drawings.</p>':'<ol class="quiz">'+QZ.map((q,k)=>`<li><p>A part code starts with <b>${esc(q.q)}</b>. What is it?</p><div class="opts">${q.opts.map((o,m)=>`<button class="opt${q.pick===m?(o===q.a?' ok':' no'):''}" data-qz="${k}:${m}">${esc(o)}</button>`).join('')}</div></li>`).join('')+'</ol><div class="row"><button class="btn small" id="tkQuizNew">New questions</button></div>'}
+    else h+='<ul class="list">'+sheets.map(s=>{const w=wiredN(s.id),n=pathCount(s.id),wired=w>=n,t=!!d.tested[s.id];
+      return `<li><span><b>${s.id}</b> ${esc(s.t)}<br><span class="meta">${n?`Wired ${w}/${n} paths`:'Nothing to wire'} · ${t?'✓ signed off':wired?'ready to test':'not tested'}</span></span><span class="row" style="gap:4px;flex-wrap:nowrap"><button class="btn small" data-tkwire="${s.id}">${wired?'Rewire':'Wire it'}</button><button class="btn small${wired&&!t?' primary':''}" data-tktest="${s.id}" ${wired||freeMode()?'':'disabled'}>Test it</button></span></li>`}).join('')+'</ul>';
+    h+='</details>'});
+  el.innerHTML=h}
+
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tkwire],[data-tktest],[data-qz],#tkQuizNew,#tkNew,[data-qc],#qcPass');if(!t)return;
+  if(t.id==='qcPass'){qcSignOff();return}
+  if(t.dataset.tkwire){loadSheet(t.dataset.tkwire);tab('Build');window.scrollTo({top:0,behavior:'smooth'});return}
+  if(t.dataset.tktest||t.dataset.qc){loadSheet(t.dataset.tktest||t.dataset.qc,'qc');tab('Job');window.scrollTo({top:0,behavior:'smooth'});return}
+  if(t.id==='tkQuizNew'){newQuiz();drawTruck();return}
+  if(t.id==='tkNew'){if(!confirm('Start a new truck? This clears your sign-offs and wired paths.'))return;const d=TK.get();TK.set({tested:{},quiz:false,fails:0,trucks:(d.trucks||0)+1});LS.set('teb2-built',{});LS.set('teb2-truck-open',0);S.build=null;drawTruck();return}
+  if(t.dataset.qz){const [k,m]=t.dataset.qz.split(':').map(Number);QZ[k].pick=m;
+    if(QZ.every(q=>q.pick!=null&&q.opts[q.pick]===q.a)){const d=TK.get();d.quiz=true;TK.set(d);LS.set('teb2-truck-open',1)}
+    drawTruck()}});
+document.addEventListener('change',e=>{if(e.target.id==='tkFree'){LS.set('teb2-truck-free',e.target.checked);drawTruck()}});
+document.addEventListener('toggle',e=>{const s=e.target.closest&&e.target.closest('details.stage');if(s&&s.open)LS.set('teb2-truck-open',+s.dataset.stage)},true);
 /* ===== UI ===== */
 const $=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1745,7 +1931,9 @@ function drawPanels(){const M=S.M,sh=M.sh,j=S.job,cp=$('complaint');
   $('shTitle').textContent=sh.id+' · '+sh.t;$('shMeta').textContent='Page '+sh.pg;$('shNote').textContent=sh.note;
   const ac=sh.cols.some(c=>c.f==='A'),srs=sh.id==='JA';$('shWarn').hidden=!(ac||srs);
   $('shWarn').textContent=ac?'Real 120 V AC on this sheet can kill. On a truck, unplug shore power before working on it.':srs?'Never put an ohmmeter on a real airbag squib. Use the SRS tester and a dummy load.':'';
-  if(j.done){cp.textContent=j.shown?'Answers shown below. Hit New job for the next one.':'Job closed. Hit New job for the next one.';cp.className='complaint done';$('woMeta').textContent=j.shown?'Answer shown':'Repaired'}
+  $('qcPass').hidden=!(j.kind==='qc'&&!j.done);
+  if(j.kind==='qc'&&!j.done){cp.textContent='New build, first power-up. '+(j.complaint?'What you notice: '+j.complaint:'Nothing jumps out at you.')+' Check every path with the meter: ohms with the key off, then volts. Call the build mistake, or sign the sheet off if it is all good.';cp.className='complaint';$('woMeta').textContent='Build test'}
+  else if(j.done){cp.textContent=j.shown?'Answers shown below. Hit New job for the next one.':'Job closed. Hit New job for the next one.';cp.className='complaint done';$('woMeta').textContent=j.shown?'Answer shown':'Repaired'}
   else if(!S.faults.length){cp.textContent='No complaint. Known-good circuit: take baseline readings so you know what normal looks like.';cp.className='complaint';$('woMeta').textContent='No faults'}
   else{cp.textContent='Driver says: '+(j.complaint||'No complaint you can notice. The fault is real, so find it with the meter.');cp.className='complaint';const n=S.faults.length;$('woMeta').textContent=j.kind==='custom'?'Your bugs: '+n:n+' hidden fault'+(n>1?'s':'')}
   $('d1').setAttribute('aria-pressed',S.diff===1);$('d2').setAttribute('aria-pressed',S.diff===2);
@@ -1760,24 +1948,25 @@ function drawPanels(){const M=S.M,sh=M.sh,j=S.job,cp=$('complaint');
   $('plList').innerHTML=S.hide?(pl.length?`<li>${pl.length} bug${pl.length>1?'s':''} hidden</li>`:''):pl.map(f=>{const p=M.byId[f.pid];return `<li><span>${esc(p.tag)} · ${esc(p.n)} <span class="meta">${TYPES[f.type]}</span></span><button class="btn small" data-rm="${esc(f.pid)}">Remove</button></li>`}).join('');
   $('stJobs').textContent=stats.jobs;$('stClean').textContent=stats.clean;$('stSheets').textContent=(stats.sheets||[]).length}
 function showCauses(list,title){const M=S.M,box=$('causeBox');
-  box.innerHTML=list.map(f=>{const p=M.byId[f.pid],c=causeFor(p,f.type);return `<div><span class="k">${esc(title)}: ${esc(p.tag)} · ${TYPES[f.type]}</span><p><b>What caused it.</b> ${esc(c.c)}</p><p><b>Proper repair.</b> ${esc(c.f)}</p></div>`}).join('');box.hidden=!list.length}
+  box.innerHTML=list.map(f=>{const p=M.byId[f.pid],c=S.job&&S.job.kind==='qc'?qcCause(p,f.type):causeFor(p,f.type);return `<div><span class="k">${esc(title)}: ${esc(p.tag)} · ${TYPES[f.type]}</span><p><b>What caused it.</b> ${esc(c.c)}</p><p><b>Proper repair.</b> ${esc(c.f)}</p></div>`}).join('');box.hidden=!list.length}
 
 function render(){_fm=fmap(S.faults);let V=null;if(S.mode==='V'){V=simulate(S.M,S.st,S.faults)}else V={};
-  drawPanels();drawSVG(S.mode==='V'?V:null);drawMeter(V);drawLearn()}
+  drawPanels();drawSVG(S.mode==='V'?V:null);drawMeter(V);drawLearn();if(!S.build||S.build.sid!==S.M.sh.id)drawBuild()}
 
 /* ---- jobs ---- */
 function msg(t,cls){$('dxMsg').textContent=t;$('dxMsg').className='msg'+(cls?' '+cls:'')}
 function resetBench(){S.st={sw:{},blown:{},relay:{},key:true};msg('');showCauses([],'')}
 function loadSheet(id,kind){$('explain').hidden=true;S.sid=id;LS.set('teb2-sheet',id);S.M=build(SH.find(s=>s.id===id));S.L=layout(S.M);S.red='BAT';S.black='N';$('sheetSel').value=id;newJob(kind||'random')}
-function newJob(kind){resetBench();S.faults=[];
+function newJob(kind){S.build=null;resetBench();S.faults=[];
   if(kind==='random'){S.faults=pickFaults(S.M,S.diff)||pickFaults(S.M,1)||[]}
+  if(kind==='qc'){S.faults=Math.random()<0.7?(pickFaults(S.M,1)||[]):[]}
   S.job={kind,misses:0,done:false,shown:false,complaint:complaint(S.M,S.faults)};render()}
 function check(){const j=S.job;if(!j||j.done)return;const id=$('dxPart').value,ty=$('dxType').value,p=S.M.byId[id];
-  if(!S.faults.length){msg('Nothing is broken on this bench.');return}
+  if(!S.faults.length){if(j.kind==='qc'){j.misses++;msg(`${p.tag} checks out fine. Keep testing, or sign it off if everything is good.`,'bad')}else msg('Nothing is broken on this bench.');return}
   const hit=S.faults.find(f=>f.pid===id&&f.type===ty);
   if(hit){S.faults=S.faults.filter(f=>f!==hit);S.st.blown={};showCauses([hit],'Found');
     if(S.faults.length){msg(`Good call: ${p.tag} had ${TYPES[ty].toLowerCase()}. Repaired. Something's still wrong, keep testing.`,'ok');j.complaint=complaint(S.M,S.faults)}
-    else{j.done=true;msg(`Good call: ${p.tag} had ${TYPES[ty].toLowerCase()}. Repaired. Circuit tests good.`,'ok');
+    else{j.done=true;msg(`Good call: ${p.tag} had ${TYPES[ty].toLowerCase()}. Repaired. Circuit tests good.`+(j.kind==='qc'?' Signed off.'+truckPass():''),'ok');
       if(j.kind==='random'){stats.jobs++;if(!j.misses)stats.clean++;stats.sheets=[...new Set([...(stats.sheets||[]),S.sid])];LS.set('teb2-stats',stats)}}}
   else{j.misses++;msg(S.faults.some(f=>f.pid===id)?`${p.tag} is bad, just not that way. Test it again.`:`${p.tag} checks out fine. Keep testing.`,'bad')}
   render();if(hit)$('causeBox').hidden=false}
@@ -1818,8 +2007,8 @@ $('findQ').addEventListener('input',e=>find(e.target.value));
 $('findRes').addEventListener('click',e=>{const t=e.target.closest('[data-open]');if(!t)return;loadSheet(t.dataset.open);document.querySelector('.sheetbar').scrollIntoView({behavior:'smooth'})});
 
 /* ---- tabs ---- */
-function tab(name){for(const n of ['Job','Learn','Words']){$('tab'+n).setAttribute('aria-selected',n===name);$('pane'+n).hidden=n!==name}LS.set('teb2-tab',name)}
-for(const n of ['Job','Learn','Words'])$('tab'+n).onclick=()=>tab(n);
+function tab(name){for(const n of ['Job','Learn','Build','Truck','Words']){$('tab'+n).setAttribute('aria-selected',n===name);$('pane'+n).hidden=n!==name}if(name==='Build')drawBuild();if(name==='Truck')drawTruck();LS.set('teb2-tab',name)}
+for(const n of ['Job','Learn','Build','Truck','Words'])$('tab'+n).onclick=()=>tab(n);
 /* ---- boot ---- */
 (function(){const g={};SH.forEach(s=>(g[s.id[0]]||(g[s.id[0]]=[])).push(s));
   $('sheetSel').innerHTML=Object.keys(GROUPS).filter(k=>g[k]).map(k=>`<optgroup label="${esc(GROUPS[k])}">${g[k].map(s=>`<option value="${s.id}">${s.id} · ${esc(s.t)} (p. ${s.pg})</option>`).join('')}</optgroup>`).join('');
