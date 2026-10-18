@@ -163,6 +163,8 @@ body.pathmode.riding .dxcard{display:none!important}
 .lvmap{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
 .lvl{width:100%;display:flex;gap:10px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--sheet);border-radius:10px;padding:8px 10px}
 .lvl.done{border-color:var(--ok)}
+.tour{list-style:none;margin:6px 0 0;padding:0;display:flex;flex-direction:column;gap:6px}.tour li{font-size:.9rem}.tour li.pass{opacity:.6}.role.new{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}.newp{border:1.5px solid var(--accent)}.newp p{margin:0}.tour li.core b{color:var(--accent)}.role{display:inline-block;font-family:var(--f-display);font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 5px;margin-left:4px}
+.part .pn{font-size:.74rem;color:var(--muted)}
 .lvmap li{display:flex;flex-direction:column;gap:4px}.xbtn{align-self:flex-end}
 .seg button[disabled]{opacity:.55;cursor:not-allowed}.lvl[disabled]{opacity:.55}
 .lvl .sn{width:28px;height:28px;border-radius:50%;background:var(--bg);display:grid;place-items:center;flex:none;font-family:var(--f-display);font-weight:700}
@@ -1735,7 +1737,7 @@ function bDone(){return LS.get('teb2-built',{})}
 function bTarget(c){return S.M.parts.filter(p=>p.c===c&&(S.bw||p.t!=='w'))}
 function bStart(c){const M=S.M,t=bTarget(c);let seed=c*7919+M.sh.pg*31;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
   const others=M.parts.filter(p=>p.c!==c&&p.c>=0&&p.t!=='w'&&p.t!=='G'&&!t.some(x=>x.tag===p.tag));const decoys=[];
-  while(decoys.length<Math.min(2,others.length)){const d=others[Math.floor(rnd()*others.length)];if(!decoys.includes(d))decoys.push(d)}
+  while(decoys.length<Math.min(S.bnodecoy?0:2,others.length)){const d=others[Math.floor(rnd()*others.length)];if(!decoys.includes(d))decoys.push(d)}
   const bin=[...t,...decoys].map(p=>p.id);for(let i=bin.length-1;i>0;i--){const j=Math.floor(rnd()*(i+1));[bin[i],bin[j]]=[bin[j],bin[i]]}
   S.build={c,placed:[],bin,decoys:decoys.map(d=>d.id),result:null}}
 function bDefaultPath(){const M=S.M,c=S.job&&S.job.complaint||'';const L=M.parts.find(p=>'LDMHSXE'.includes(p.t)&&c.includes(p.n));const paths=buildPaths(M);
@@ -1768,7 +1770,7 @@ function drawBuild(){const M=S.M;if(!M)return;const paths=buildPaths(M);if(!path
   const slot=i=>{const id=b.placed[i];const st=R&&R.res[i]?(R.res[i].ok?' ok':' no'):'';
     if(!id)return `<li class="empty"><span class="n">${i+1}</span>${i===b.placed.length?'← tap a part below to put it here':''}</li>`;
     const p=M.byId[id];return `<li class="${st}"><span class="n">${i+1}</span><span><b>${esc(p.tag)}</b> <span class="hint">${esc(BKIND[p.t])}</span></span><button class="rm" data-brm="${i}" aria-label="Remove">✕</button></li>`};
-  const bin=b.bin.filter(id=>!b.placed.includes(id)).map(id=>{const p=M.byId[id];return `<button class="part" data-badd="${esc(id)}"><b>${esc(p.tag)}</b><span>${esc(BKIND[p.t])}</span></button>`}).join('');
+  const bin=b.bin.filter(id=>!b.placed.includes(id)).map(id=>{const p=M.byId[id];return `<button class="part" data-badd="${esc(id)}"><b>${esc(p.tag)}</b><span>${esc(BKIND[p.t])}</span><span class="pn">${esc(p.n)}</span></button>`}).join('');
   $('paneBuild').innerHTML=`<div class="box"><h3>Build it yourself</h3><p>Rebuild one path of <b>${esc(M.sh.id)} · ${esc(M.sh.t)}</b> from memory. Tap parts in the order current flows: from the power at the top, down to ground. Watch out for decoys from other paths. ${S.bw?'':'Wires are joined for you.'}</p>
     <div class="chips">${paths.map(o=>`<button class="chip${done.includes(o.c)?' done':''}" data-bpath="${o.c}" aria-pressed="${o.c===b.c}">Path ${o.c+1}</button>`).join('')}</div>
     <label class="row" style="gap:6px;font-size:.88rem"><input type="checkbox" id="bWires" ${S.bw?'checked':''}> Hard mode: include every wire</label></div>
@@ -2053,9 +2055,9 @@ const LEVELS=[
    can:'Name the parts of a circuit and put a real one together in the right order.',
    cards:[C('Every circuit is a loop','Electricity only flows if it can leave the battery and get back to it. Break the loop anywhere and everything on it stops.'),
      C('The 4 parts','<b>Power</b> (the battery) pushes. <b>Protection</b> (a fuse) guards the wire. The <b>load</b> (lamp, horn, motor) does the work. <b>Ground</b> is the road back to battery −. Most circuits add a <b>control</b> too: a switch, relay or computer that turns it on and off.'),
-     C('The order','Power → fuse → switch or relay → load → ground. The fuse always sits right after the power, so it protects the whole wire after it.'),
+     C('The order','Power → fuse → switch → load → ground. The fuse always sits right after the power, so it protects the whole wire after it.'),
      C('On the drawing','Power is at the top (the BATT and IGN lines). Ground is the ⏚ symbol at the bottom. Read every circuit from the top down, the way the current flows.'),
-     C('Your job','Rebuild 2 paths of the horn circuit (sheet GQ) from memory: tap the parts in the order the current flows. Watch out for decoys from other paths.')]},
+     C('Your job, in small steps','First you build a simple lamp circuit from plain parts. Then a horn, which needs one new part: a relay. Then you meet the real Volvo horn drawing, part by part, and finally build it yourself.')]},
   {id:'meter',name:'Using the meter',kind:'probe',sheet:'GQ',
    can:'Read volts, voltage drop and ohms, and know what a normal reading looks like.',
    cards:[C('Volts are push','The meter shows the difference in push between its two leads. Keep the black lead on battery − and touch the red lead anywhere: it shows how much push is at that spot.'),
@@ -2132,9 +2134,41 @@ function levelDone(i){const L=LEVELS[i],d=pst();if(L.kind==='truck'){const t=TK.
 
 /* ---- picking jobs ---- */
 const MC={};function mc(id){return MC[id]||(MC[id]=build(SH.find(s=>s.id===id)))}
-let _order=null;function sheetOrder(){return _order||(_order=SH.map(s=>({id:s.id,n:s.cols.reduce((a,c)=>a+c.it.length,0)})).sort((a,b)=>a.n-b.n).map(x=>x.id))}
+let _size=null;function sheetOrder(){if(!_size){_size={};SH.forEach(s=>_size[s.id]=s.cols.reduce((a,c)=>a+c.it.length,0))}const seen=seenList();
+  return SH.map(s=>s.id).sort((a,b)=>(seen.includes(b)-seen.includes(a))||(_size[a]-_size[b]))}
+function seenList(){return LS.get('teb2-seen',[])}function metList(){return LS.get('teb2-met',[])}
+function kindKey(p){if(p.t==='k')return /^SP/.test(p.tag)?'splice':isStud(p.tag,p.n)?'stud':'plug';if(p.t==='G')return /^SK/.test(p.tag)?'pack':'gnd';return p.t}
+const NEWP={plug:['Plug (connector)','Where the harness comes apart for service. Current just passes through. MCFC:70 means plug MCFC, pin 70.'],
+  splice:['Splice (SP…)','Several wires crimped together inside the harness tape. Current passes through. One bad splice can kill everything joined there.'],
+  stud:['Stud','A threaded bolt with ring terminals on it, usually for ground or heavy power.'],
+  pack:['Ground splice pack (SKX…)','A block where many ground wires meet before going to the frame. A bad one makes several things act up at once.'],
+  gnd:['Ground point','Where the circuit gets back to battery −.'],w:['Wire','Named after its circuit. The number after the dash is how thick it is in mm².'],
+  f:['Fuse','A thin metal strip that melts if too much current flows, so the wire can\'t burn.'],cb:['Circuit breaker','Like a fuse, but it trips and can be reset instead of melting.'],
+  sw:['Switch','Closed lets current through, open stops it. Some you press; some are moved by air pressure or position.'],
+  ecu:['Computer output','An electronic switch inside a computer module. A27 D:5 means module A27, plug D, pin 5. The computer turns it on when it decides to.'],
+  rk:['Relay coil','Becomes a magnet when powered (pins 86 and 85) and pulls the relay contacts closed.'],rc:['Relay contacts','The heavy switch inside a relay (pins 30 and 87). Closed only when the coil is powered.'],
+  rn:['Relay resting contacts','Pins 30 and 87A: closed when the relay is OFF, open when it clicks on.'],L:['Bulb','A lamp: the load. Current through it makes light.'],
+  D:['LED lamp','A modern lamp. It only works with + and − the right way round.'],M:['Motor','The load: power in, ground out, and it spins.'],H:['Horn or speaker','Makes sound when current flows through its coil.'],
+  S:['Solenoid','A coil that becomes a magnet and pulls a plunger, to open an air valve or engage something.'],X:['Heater','Turns electricity into heat. Pulls a lot of current.'],
+  E:['Module as a load','A computer or box that uses power. Here it counts as one load: it needs power and ground to wake up.'],
+  R:['Sensor or resistor','Its resistance changes with what it measures (temperature, pressure, position). The computer reads that as a voltage.'],
+  Q:['Computer input','The computer\'s ear. It sends 5 V out through a resistor and watches the voltage on this wire.'],
+  T:['Terminating resistor','120 Ω at each end of a data network. Together they read 60 Ω.'],ri:['Battery','Each battery has a little internal resistance. A weak battery has more.']};
+function markSeen(M,parts){const s=seenList();if(!s.includes(M.sh.id)){s.push(M.sh.id);LS.set('teb2-seen',s)}const m=metList();let ch=false;(parts||M.parts).forEach(p=>{const k=kindKey(p);if(!m.includes(k)){m.push(k);ch=true}});if(ch)LS.set('teb2-met',m)}
+function loadTrace(M,faults){const c=complaint(M,faults)||'';const L=M.parts.find(p=>LOADS.includes(p.t)&&c.includes(p.n));return L?traceCol(M,L.c):findTrace(M,M.byId[faults[0].pid],c)}
+function needTour(M,parts){const m=metList();return !seenList().includes(M.sh.id)||parts.some(p=>!m.includes(kindKey(p)))}
+function newBox(parts){const m=metList(),ks=[...new Set(parts.map(kindKey))].filter(k=>!m.includes(k)&&NEWP[k]);
+  return ks.length?`<div class="box newp"><b>New on this sheet</b>${ks.map(k=>`<p><span class="role new">NEW</span> <b>${esc(NEWP[k][0])}</b>: ${esc(NEWP[k][1])}</p>`).join('')}</div>`:''}
+function tourRow(p){const e=explainPart(p),m=metList(),nw=!m.includes(kindKey(p));return `<li class="${p.t==='w'||p.t==='k'?'pass':'core'}"><b>${esc(p.tag)}</b> <span class="role${nw?' new':''}">${tourRole(p)||KIND[p.t]}</span><br><span class="hint">${esc(e.what)}</span></li>`}
+function tourHTML(M,tr,why){return `<span class="tag">Meet this sheet</span><h3>${esc(M.sh.id)} · ${esc(M.sh.t)}</h3><p>${why}</p>${newBox(tr)}
+  <div class="box"><b>The path you'll work on</b><ul class="tour">${tr.map(tourRow).join('')}</ul></div>
+  <p class="hint">Bright = the parts that do the job. Faded = plugs, splices and wires the current just passes through.</p>`}
+function sheetTourHTML(M){const paths=buildPaths(M),all=M.parts;
+  return `<span class="tag">Meet this sheet</span><h3>${esc(M.sh.id)} · ${esc(M.sh.t)}</h3><p>${esc(M.sh.note)}</p>${newBox(all)}`+paths.map(o=>{const E=bEnds(o.c),core=o.items.filter(p=>p.t!=='w'&&p.t!=='k'),k=o.items.filter(p=>p.t==='k').length,w=o.items.filter(p=>p.t==='w').length;
+    return `<div class="box"><b>Path ${o.c+1}</b><p class="hint">⚡ ${esc(E.start)}</p><ul class="tour">${core.map(tourRow).join('')||'<li class="hint">Only plugs and wires on this path.</li>'}</ul><p class="hint">+ ${k} plug${k===1?'':'s'}/splice${k===1?'':'s'} and ${w} wire${w===1?'':'s'} in between · ⏚ ${esc(E.end)}</p></div>`}).join('')}
+function firstOfStage(id){const st=stageSheets(stageOf(id));return st.length&&st[0].id===id}
 function isSensor(M,P0){if(P0.t==='R'||P0.t==='Q')return true;return M.sh.cols[P0.c]?traceCol(M,P0.c).some(p=>p.t==='Q'):false}
-function fits(M,f,ft){const p=M.byId[f.pid];if(!p)return false;const sen=!p.can&&isSensor(M,p),ac=p.c>=0&&M.sh.cols[p.c].f==='A';if(ac)return false;
+function fits(M,f,ft){const p=M.byId[f.pid];if(!p)return false;const sen=!p.can&&isSensor(M,p),ac=p.c>=0&&M.sh.cols[p.c].f==='A';if(ac||M.sh.id==='JA'||M.sh.id==='JH')return false;
   switch(ft){case 'can':return p.can;case 'sensor':return sen;case 'any':return true}
   if(p.can||sen)return false;
   switch(ft){case 'open':return f.type==='open'&&!['rk','rc','rn'].includes(p.t);case 'high':return f.type==='high';
@@ -2142,8 +2176,8 @@ function fits(M,f,ft){const p=M.byId[f.pid];if(!p)return false;const sen=!p.can&
     case 'think':return (f.type==='open'||f.type==='high')&&provenGood(M,[f]).good.length>=2}
   return false}
 function candidates(L,limit){const out=[];for(const id of sheetOrder()){const sh=SH.find(x=>x.id===id);if(sh.cols.some(c=>c.f==='A'))continue;const M=mc(id);const fs=detectable(M).filter(f=>fits(M,f,L.ft));if(fs.length)out.push({id,fs});if(out.length>=limit)break}return out}
-function pickJob(L,first){const d=pst();const cand=candidates(L,first?3:(L.ft==='any'?14:10));if(!cand.length)return null;
-  let pool=cand.filter(c=>c.id!==d.lastSheet);if(!pool.length)pool=cand;const c=pool[Math.floor(Math.random()*pool.length)];
+function pickJob(L,first){const d=pst();const done=d.extra?(d.xstars||[]).length+3:starsFor(L.id).length;const cand=candidates(L,first?1:Math.min(L.ft==='any'?14:10,2+2*done));if(!cand.length)return null;
+  let pool=cand.filter(c=>c.id!==d.lastSheet);if(!pool.length)pool=cand;const c=first?cand[0]:pool[Math.floor(Math.random()*pool.length)];
   let faults;if(L.diff===2){faults=pickFaults(mc(c.id),2)||[c.fs[Math.floor(Math.random()*c.fs.length)]]}else faults=[{...c.fs[first?Math.floor(c.fs.length/2):Math.floor(Math.random()*c.fs.length)]}];
   return {sid:c.id,faults}}
 
@@ -2167,12 +2201,13 @@ function applyLead(s){if(!s.lead&&!s.ovr)return;if(s.lead){const l=s.lead;S.red=
   S.ovr=s.ovr||null;render()}
 
 /* ---- main render ---- */
-function pathRender(){if(!isPath())return;lockFree();const d=pst(),L=lvl(),i=d.lvl;
+function pathRender(){if(!isPath())return;lockFree();{const dd=pst();const want=(dd.phase==='build'&&(dd.bstep||0)>=4)||(dd.phase==='truck'&&!!P&&P.sub==='build'&&!!S.M&&firstOfStage(S.M.sh.id));if(!!S.bnodecoy!==want){S.bnodecoy=want;S.build=null}}const d=pst(),L=lvl(),i=d.lvl;
   const nDone=LEVELS.filter((_,k)=>levelDone(k)).length;
   $('pathHead').innerHTML=`<div class="wo-head"><h2>Level ${i+1} · ${esc(L.name)}</h2><button class="btn small" id="pMap">All levels</button></div>
     <div class="lvbar">${LEVELS.map((_,k)=>`<i class="${levelDone(k)?'d':k===i?'c':''}"></i>`).join('')}</div>
     <p class="hint">${nDone} of ${LEVELS.length} levels done · ${phaseName(d.phase)}</p>`;
   const B=$('pathBody'),F=$('pathFoot');let b='',f='';
+  if(d.phase==='ride'&&(!P||!P.ride))startRide();if(d.phase==='jobs'&&(!P||!P.job))startJob();
   if(d.phase!=='build'&&d.phase!=='truck')slotClear();
   if(d.phase==='map'){bench(false);b='<ol class="lvmap">'+LEVELS.map((Lv,k)=>{const open=k===0||levelDone(k-1)||levelDone(k);
       return `<li><button class="lvl${levelDone(k)?' done':''}" data-plvl="${k}" ${open?'':'disabled'}><span class="sn">${levelDone(k)?'✓':k+1}</span><span><b>${esc(Lv.name)}</b><br><span class="hint">${esc(Lv.can)}</span></span>${open?'':'<span class="hint">🔒</span>'}</button>${levelDone(k)&&LEVELS[k].ft?`<button class="btn small xbtn" data-pextra="${k}">Practice more</button>`:''}</li>`}).join('')+'</ol>';
@@ -2180,20 +2215,23 @@ function pathRender(){if(!isPath())return;lockFree();const d=pst(),L=lvl(),i=d.l
   else if(d.phase==='learn'){bench(false);const c=L.cards[d.card]||L.cards[0];
     b=`<div class="lesson"><span class="tag">Learn · ${d.card+1} of ${L.cards.length}</span><h3>${esc(c.t)}</h3><p>${c.b}</p></div>`;
     f=`${d.card>0?'<button class="btn" id="pPrev">Back</button>':''}<button class="btn primary" id="pNext">${d.card<L.cards.length-1?'Next':L.kind==='build'?'Start building':L.kind==='probe'?'Start measuring':L.kind==='truck'?'Open the truck':'Watch me do one'}</button>`}
-  else if(d.phase==='build'){bench(false);if(S.sid!==L.sheet)loadSheet(L.sheet,'clean');slotPut('paneBuild');drawBuild();
+  else if(d.phase==='build'&&(d.bstep||0)<4){bench(false);slotClear();const k=d.bstep||0,r=buildStepHTML(k);b=r.b;f=r.f}
+  else if(d.phase==='build'){if(!S.bnodecoy){S.bnodecoy=true;S.build=null}bench(false);if(S.sid!==L.sheet)loadSheet(L.sheet,'clean');slotPut('paneBuild');drawBuild();
     const n=Math.min((bDone()[L.sheet]||[]).length,L.need);
-    b=`<p>Rebuild <b>${L.need} paths</b> of sheet ${L.sheet} (${esc(S.M.sh.t)}). Pick a path, then tap the parts in the order the current flows, from power down to ground.</p><p class="row" style="gap:6px">${[...Array(L.need)].map((_,k)=>`<span class="pip${k<n?' on':''}"></span>`).join('')} <span class="hint">${n} of ${L.need} built</span></p>`;
+    b=`<span class="tag">Step 5 of 5</span><p>Now build the real thing: <b>both paths</b> of the horn drawing. Pick a path, then tap the parts in the order the current flows. Each chip says what the part is. Tip: find your toy parts first (fuse, relay, horn, ground), then put the plugs and splices where the current passes through them.</p><p class="row" style="gap:6px">${[...Array(L.need)].map((_,k)=>`<span class="pip${k<n?' on':''}"></span>`).join('')} <span class="hint">${n} of ${L.need} built</span></p>`;
     f=n>=L.need?'<button class="btn primary" id="pLevelUp">Finish level</button>':''}
   else if(d.phase==='probe'){bench(true);if(S.sid!==L.sheet||!S.job||S.job.kind!=='probe'){loadSheet(L.sheet,'probe')}
     const T=probeTasks(),done=d.probe||[];const cur=T.findIndex((_,k)=>!done.includes(k));
     b=`<p>Use the meter below on the working horn circuit. Tap a dot on the drawing to move the selected lead. Tap the red or black lead button to choose which lead moves.</p><ol class="tasks">${T.map((t,k)=>`<li class="${done.includes(k)?'ok':k===cur?'cur':''}"><b>${esc(t.t)}</b>${k===cur?`<br>${esc(t.how)}`:''}${done.includes(k)?`<br><span class="hint">${esc(t.why)}</span>`:''}</li>`).join('')}</ol>`;
     f=cur<0?'<button class="btn primary" id="pLevelUp">Finish level</button>':''}
+  else if(d.phase==='ride'&&P&&P.ride&&P.ride.tour){bench(true);document.body.classList.add('riding');b=`<p class="cust">🧑‍🔧 Customer: “${esc(P.ride.cpl)}”</p>`+tourHTML(S.M,P.ride.tour,'Before I start, here\'s the path the customer is talking about, part by part. You know most of these already.');f='<button class="btn primary" id="pTourOk">Got it, show me the job</button>'}
   else if(d.phase==='ride'){bench(true);if(!P||!P.ride)startRide();const R=P.ride;
     b=`<span class="tag">Watch me · step ${R.k+1} of ${R.steps.length}</span><p class="cust">🧑‍🔧 Customer: “${esc(R.cpl||'Something is wrong with this circuit.')}”</p>`+R.steps.slice(0,R.k+1).map((s,k)=>`<div class="step${k===R.k?' cur':''}">${stepHTML(s,k,R.ans[k])}</div>`).join('');
     const s=R.steps[R.k],need=s.ask&&R.ans[R.k]==null;
     f=R.k<R.steps.length-1?`<button class="btn primary" id="pRideNext" ${need?'disabled':''}>${need?'Pick an answer':'Next'}</button>`:`<button class="btn primary" id="pTurn">Your turn</button>`}
   else if(d.phase==='jobs'){bench(true);if(!P||!P.job)startJob();const J=P.job,X=!!d.extra,st=X?(d.xstars||[]):starsFor(L.id),good=st.filter(x=>x>=2).length;
     b=X?`<div class="row" style="justify-content:space-between"><span class="tag">Extra practice · ${esc(L.name)} · job ${st.length+1}</span><span class="hint">Doesn't change your level</span></div>`:`<div class="row" style="justify-content:space-between"><span class="tag">Your turn · job ${st.length+1}</span><span class="stars">${[...Array(JOBS_NEED)].map((_,k)=>`<span class="pip${k<good?' on':''}"></span>`).join('')} <span class="hint">${good}/${JOBS_NEED} good jobs</span></span></div>`;
+    if(J.tour){document.body.classList.add('riding');b+=`<p class="cust">🧑‍🔧 Customer: “${esc(S.job.complaint||'')}”</p>`+tourHTML(S.M,J.tour,'New sheet. Here\'s the path the customer is talking about, so you know what you\'re looking at.');f='<button class="btn primary" id="pTourOk">Got it, start the job</button>';B.innerHTML=b;F.innerHTML=f;return}
     b+=`<p class="cust">🧑‍🔧 Customer: “${esc(S.job.complaint||'It acts up. Find it with the meter.')}”</p><p class="hint">Sheet ${S.M.sh.id} · ${esc(S.M.sh.t)}</p>`;
     if(J.thinking){b+=thinkHTML()}
     else if(J.result!=null){b+=`<div class="result"><p class="big">${'★'.repeat(J.result)}${'☆'.repeat(3-J.result)}</p><p>${J.result===3?'Clean job: no hints, no wrong calls.':J.result>=2?'Good job.':J.result===1?'Fixed, but it took a lot of help. It doesn\'t count toward the level yet.':'Answer shown. This one doesn\'t count.'}</p></div>`;
@@ -2204,11 +2242,45 @@ function pathRender(){if(!isPath())return;lockFree();const d=pst(),L=lvl(),i=d.l
   else if(d.phase==='done'){bench(false);const st=starsFor(L.id).filter(x=>x>=2);
     b=`<div class="result"><p class="big">Level ${i+1} done</p><p><b>You can now:</b> ${esc(L.can)}</p>${st.length?`<p class="hint">Stars: ${st.map(x=>'★'.repeat(x)).join('  ')}</p>`:''}</div>`;
     f=(i<LEVELS.length-1?`<button class="btn primary" id="pGoNext">Next level: ${esc(LEVELS[i+1].name)}</button>`:'<p>That\'s every level. You\'re thinking like a truck tech, and Free practice is now open.</p>')+(L.ft?`<button class="btn" data-pextra="${i}">Practice more of this</button>`:'')}
-  else if(d.phase==='truck'){if(P&&P.sub==='build'){bench(false);slotClear();slotPut('paneBuild');drawBuild();b=`<p class="hint">Wiring sheet ${S.M.sh.id}. When every path is built, test it.</p>`;f='<button class="btn" id="pTruckBack">← Back to the truck</button>'}
+  else if(d.phase==='truck'&&P&&P.sub==='build'&&P.tour){bench(false);slotClear();b=sheetTourHTML(S.M);f='<button class="btn primary" id="pTourOk">Got it, start wiring</button><button class="btn" id="pTruckBack">← Back</button>'}
+  else if(d.phase==='truck'){if(P&&P.sub==='build'){bench(false);slotClear();slotPut('paneBuild');drawBuild();b=`<p class="hint">Wiring sheet ${S.M.sh.id}. ${firstOfStage(S.M.sh.id)?'First sheet of this stage: no decoys. ':''}When every path is built, test it.</p>`;f='<button class="btn" id="pTruckBack">← Back to the truck</button>'}
     else if(P&&P.sub==='job'){bench(true);slotClear();b=`<p class="cust">${esc($('complaint').textContent)}</p>`;f='<button class="btn" id="pTruckBack">← Back to the truck</button>'}
     else{bench(false);slotClear();slotPut('paneTruck');drawTruck();b='';f=levelDone(i)?'<button class="btn primary" id="pLevelUp">Finish</button>':''}}
   B.innerHTML=b;F.innerHTML=f}
 function phaseName(p){return {learn:'Learn',ride:'Watch me',jobs:'Your turn',probe:'Practice',build:'Practice',done:'Level done',truck:'Truck',map:'All levels'}[p]||''}
+
+/* ---- level 1 steps: toy circuits → meet the real drawing → build it ---- */
+const TP={bat:['🔋 Battery +','pushes the current'],fuse:['Fuse','protects the wire'],sw:['Switch','you turn it on and off'],lamp:['Lamp','the load: it does the work'],gnd:['⏚ Ground','the road back to battery −'],
+  btn:['Horn button','a small switch on the steering wheel'],coil:['Relay coil','becomes a magnet when powered'],cont:['Relay contacts','a heavy switch the magnet pulls closed'],horn:['Horn','the load: makes the noise']};
+const TOYS=[
+  {t:'Build a lamp circuit',intro:'Tap the parts in the order the current flows: out of the battery, through everything, and back to the battery.',order:['bat','fuse','sw','lamp','gnd'],extra:[]},
+  {t:'The horn, part 1: the small loop',intro:'A horn pulls a lot of current, too much for a little button. So the button doesn\'t power the horn. It powers a <b>relay</b>: a switch flipped by a magnet. First build the small loop that makes the magnet.',order:['bat','fuse','btn','coil','gnd'],extra:['horn']},
+  {t:'The horn, part 2: the big loop',intro:'When the coil is a magnet, it pulls the relay contacts closed. Now build the big loop that carries the heavy current to the horn. One part below doesn\'t belong in this loop.',order:['bat','fuse','cont','horn','gnd'],extra:['btn']}];
+function toyStart(k){const T=TOYS[k];const bin=[...T.order,...T.extra];shuffle(bin,k*7+11);P={toy:{k,bin,placed:[],res:null}}}
+function toyWhy(T,id,i){if(!T.order.includes(id))return id==='btn'?'The horn button isn\'t in the big loop. It only runs the small loop that powers the coil.':id==='horn'?'The horn isn\'t in the small loop. This loop only makes the magnet.':'That part doesn\'t belong here.';
+  const j=T.order.indexOf(id),prev=T.order[j-1],next=T.order[j+1];
+  const pos=!prev?'goes first, because everything starts at the battery':!next?`goes last, after ${TP[prev][0]}: it takes the current home`:`goes after ${TP[prev][0]} and before ${TP[next][0]}`;return `${TP[id][0]} ${pos}.${id==='fuse'?' The fuse sits right after the power so it protects everything after it.':''}`}
+function tourRole(p){return p.t==='f'?'Fuse':p.t==='rc'?'Relay contacts':p.t==='rk'?'Relay coil':LOADS.includes(p.t)?'The load':p.t==='ecu'?'Switch (a computer)':p.t==='G'?'Ground':p.t==='sw'?'Switch':p.t==='k'?(/^SP/.test(p.tag)?'Splice':'Plug'):p.t==='w'?'Wire':''}
+function buildStepHTML(k){let b='',f='';
+  if(k<3){if(!P||!P.toy||P.toy.k!==k)toyStart(k);const T=TOYS[k],Y=P.toy;
+    b=`<span class="tag">Step ${k+1} of 5</span><h3>${T.t}</h3><p>${T.intro}</p><ol class="slots toy">${T.order.map((_,i)=>{const id=Y.placed[i];const st=Y.res?(Y.res[i]?' ok':' no'):'';
+      return id?`<li class="${st}"><span class="n">${i+1}</span><span><b>${TP[id][0]}</b> <span class="hint">${TP[id][1]}</span></span><button class="rm" data-ptrm="${i}" aria-label="Remove">✕</button></li>`:`<li class="empty"><span class="n">${i+1}</span>${i===Y.placed.length?'← tap a part below':''}</li>`}).join('')}</ol>
+      <div class="bin">${Y.bin.filter(id=>!Y.placed.includes(id)).map(id=>`<button class="part" data-ptadd="${id}"><b>${TP[id][0]}</b><span>${TP[id][1]}</span></button>`).join('')}</div>`;
+    if(Y.res){const ok=Y.res.every(x=>x)&&Y.placed.length===T.order.length;
+      b+=ok?`<p class="msg ok">That's the loop. Current leaves the battery, ${k===0?'gets switched, lights the lamp':k===1?'goes through the button and makes the coil a magnet':'goes through the closed contacts and blows the horn'}, and comes home through ground.</p>`
+        :`<ul class="fb">${Y.placed.map((id,i)=>Y.res[i]?'':`<li class="no">${esc(toyWhy(T,id,i))}</li>`).join('')}</ul>`;
+      f=ok?'<button class="btn primary" id="pStepNext">Next</button>':'<button class="btn" id="pToyReset">Try again</button>'}
+    else f=`<button class="btn primary" id="pToyCheck" ${Y.placed.length===T.order.length?'':'disabled'}>Check</button>`;
+    return {b,f}}
+  // step 4: meet the real drawing
+  if(S.sid!=='GQ')loadSheet('GQ','clean');const M=S.M,t1=traceCol(M,0),t2=traceCol(M,1);
+  const row=p=>{const e=explainPart(p);return `<li class="${p.t==='w'||p.t==='k'?'pass':'core'}"><b>${esc(p.tag)}</b> <span class="role">${tourRole(p)}</span><br><span class="hint">${esc(e.what)}</span></li>`};
+  b=`<span class="tag">Step 4 of 5</span><h3>Meet the real horn drawing</h3><p>This is Volvo's horn circuit (sheet GQ). The codes look scary, but each one is just a part you already know, or a plug or wire the current passes through.</p>
+    <div class="box"><b>Path 1 · the big loop (power to the horn)</b><ul class="tour">${t1.map(row).join('')}</ul></div>
+    <div class="box"><b>Path 2 · the small loop (the relay coil)</b><ul class="tour">${t2.map(row).join('')}</ul>
+    <p class="hint">One difference from your toy: there's no horn button in this loop. The button tells the dash computer (A03), and the computer switches the coil on from the <b>ground side</b>. A switch works anywhere in the loop, before the load or after it.</p></div>
+    <div class="box"><p><b>The trick:</b> cross out the plugs, splices and wires and you're left with your toy circuit. Path 1: fuse F20 → relay contacts RLY10 → horn H02A → ground. Path 2: fuse F20 → relay coil → computer → ground.</p></div>`;
+  markSeen(M);f='<button class="btn primary" id="pStepNext">Now build it</button>';return {b,f}}
 
 /* ---- probe tasks (level 2) ---- */
 function probeTasks(){const M=S.M;const L=M.parts.find(p=>p.t==='H')||M.parts.find(p=>LOADS.includes(p.t));const tr=findTrace(M,L,'');
@@ -2226,15 +2298,15 @@ function pathOnRender(V){if(!isPath())return;const d=pst();
 
 /* ---- watch me ---- */
 function startRide(){const L=lvl();const j=pickJob(L,true);if(!j){P={ride:{steps:[{say:'No example found on these sheets.',final:true}],k:0,ans:{}}};return}
-  loadSheet(j.sid,'path');S.faults=j.faults;S.job.complaint=complaint(S.M,S.faults);
+  S.mode='V';loadSheet(j.sid,'path');S.faults=j.faults;S.job.complaint=complaint(S.M,S.faults);
   const steps=coachSteps(S.M,S.faults,S.faults[0]);const last=steps[steps.length-1];
   if(last&&last.final&&last.ans){const c=causeFor(last.ans,S.faults[0].type);steps.push({say:`What caused it: ${c.c} Proper repair: ${c.f}`})}
-  P={ride:{steps,k:0,ans:{},cpl:S.job.complaint}};applyLead(steps[0])}
+  const tr=loadTrace(S.M,S.faults);P={ride:{steps,k:0,ans:{},cpl:S.job.complaint,tour:needTour(S.M,tr)?tr:null}};if(!P.ride.tour)applyLead(steps[0]);else render()}
 
 /* ---- your turn ---- */
 function startJob(){const L=lvl();const j=pickJob(L,false);if(!j)return;const d=pst();d.lastSheet=j.sid;PS.set(d);
-  loadSheet(j.sid,'path');S.faults=j.faults;S.job.complaint=complaint(S.M,S.faults);render();
-  P={job:{steps:coachSteps(S.M,S.faults,S.faults[0]),hints:[],hans:{},result:null,thinking:!!L.think,think:L.think?thinkSet():null}}}
+  S.mode='V';loadSheet(j.sid,'path');S.faults=j.faults;S.job.complaint=complaint(S.M,S.faults);render();
+  const tr=loadTrace(S.M,S.faults);P={job:{steps:coachSteps(S.M,S.faults,S.faults[0]),hints:[],hans:{},result:null,thinking:!!L.think,think:L.think?thinkSet():null,tour:needTour(S.M,tr)?tr:null}}}
 function thinkSet(){const pg=provenGood(S.M,S.faults);const pick=[...shuffle(pg.good.slice(),5).slice(0,4),...shuffle(pg.unknown.slice(),9).slice(0,4)];
   return {parts:shuffle(pick,pick.length*3).map(p=>p.id),good:pg.good.map(p=>p.id),sel:[],checked:false}}
 function thinkHTML(){const T=P.job.think;
@@ -2247,13 +2319,19 @@ function pathHook(ev){if(!isPath()||!P||!P.job||!S.job||S.job.kind!=='path')retu
   pathRender()}
 
 /* ---- events ---- */
-document.addEventListener('click',e=>{const t=e.target.closest('#pathCard button,#paneBuild button');if(!t||!isPath())return;const d=pst(),L=lvl();
-  if(t.closest('#paneBuild')){setTimeout(pathRender,0);return}
+document.addEventListener('click',e=>{if(isPath()&&e.target.closest('#paneBuild'))setTimeout(pathRender,0)},true);
+document.addEventListener('click',e=>{const t=e.target.closest('#pathCard button');if(!t||!isPath()||t.closest('#paneBuild'))return;const d=pst(),L=lvl();
   const id=t.id;
-  if(id==='pNext'){if(d.card<L.cards.length-1)setPhase('learn',{card:d.card+1});else{P=null;setPhase(L.kind==='build'?'build':L.kind==='probe'?'probe':L.kind==='truck'?'truck':'ride',{probe:[]})}}
+  if(id==='pNext'){if(d.card<L.cards.length-1)setPhase('learn',{card:d.card+1});else{P=null;setPhase(L.kind==='build'?'build':L.kind==='probe'?'probe':L.kind==='truck'?'truck':'ride',{probe:[],bstep:0})}}
   else if(id==='pPrev')setPhase('learn',{card:Math.max(0,d.card-1)});
   else if(id==='pRideNext'){P.ride.k++;applyLead(P.ride.steps[P.ride.k])}
   else if(id==='pTurn'){P=null;setPhase('jobs')}
+  else if(id==='pTourOk'){if(P.ride){markSeen(S.M,P.ride.tour);P.ride.tour=null;pathRender();applyLead(P.ride.steps[0]);return}if(P.job){markSeen(S.M,P.job.tour);P.job.tour=null}else{markSeen(S.M);P.tour=false}}
+  else if(t.dataset.ptadd){const Y=P.toy;if(Y.placed.length<TOYS[Y.k].order.length)Y.placed.push(t.dataset.ptadd);Y.res=null}
+  else if(t.dataset.ptrm!=null){P.toy.placed.splice(+t.dataset.ptrm,1);P.toy.res=null}
+  else if(id==='pToyCheck'){const Y=P.toy,T=TOYS[Y.k];Y.res=Y.placed.map((x,i)=>x===T.order[i])}
+  else if(id==='pToyReset'){toyStart(P.toy.k)}
+  else if(id==='pStepNext'){P=null;setPhase('build',{bstep:(d.bstep||0)+1})}
   else if(id==='pNextJob'){P=null}
   else if(t.dataset.pextra!=null){P=null;setPhase('jobs',{lvl:+t.dataset.pextra,extra:true,xstars:[]})}
   else if(id==='pXDone'){P=null;const n=LEVELS.findIndex((_,k)=>!levelDone(k));setPhase(n<0?'map':'learn',{lvl:n<0?d.lvl:n,card:0})}
@@ -2270,7 +2348,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('#pathCard button
   else if(id==='pTruckBack'){P={sub:null}}
   else return;
   pathRender()});
-function pathTab(name){if(lvl().kind!=='truck')return;P={sub:name==='Build'?'build':name==='Job'?'job':null};pathRender()}
+function pathTab(name){if(lvl().kind!=='truck')return;P={sub:name==='Build'?'build':name==='Job'?'job':null};if(P.sub==='build')P.tour=needTour(S.M,S.M.parts);pathRender()}
 function lockFree(){const b=$('mFree'),ok=allDone();b.disabled=!ok;b.textContent=ok?'Free practice':'🔒 Free practice';b.title=ok?'':'Unlocks when you finish all 12 levels'}
 function setMode(path){if(!path&&!allDone()){path=true}lockFree();document.body.classList.toggle('pathmode',path);LS.set('teb2-mode',path?'path':'free');
   $('mPath').setAttribute('aria-pressed',path);$('mFree').setAttribute('aria-pressed',!path);
